@@ -1,0 +1,118 @@
+name: Deploy SignBridge Web App (lh_dev)
+
+on:
+  push:
+    branches:
+      - lh_dev
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Build Next.js
+        run: npm run build
+
+      - name: Package standalone artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .deploy webapp.zip
+
+          cp -r .next/standalone .deploy
+          mkdir -p .deploy/.next
+          cp -r .next/static .deploy/.next/static
+          cp -r public .deploy/public
+
+          test -f .deploy/server.js
+
+          cd .deploy
+          zip -r ../webapp.zip . -x "*.DS_Store" > /dev/null
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webapp-package
+          path: webapp.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webapp-package
+          path: .
+
+      - name: Validate required variables
+        shell: bash
+        env:
+          AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+          AZURE_WEBAPP_RESOURCE_GROUP: ${{ secrets.AZURE_WEBAPP_RESOURCE_GROUP }}
+        run: |
+          set -euo pipefail
+          if [ -z "${AZURE_WEBAPP_NAME}" ]; then
+            echo "Missing GitHub variable: AZURE_WEBAPP_NAME"
+            exit 1
+          fi
+          if [ -z "${AZURE_WEBAPP_RESOURCE_GROUP}" ]; then
+            echo "Missing GitHub variable: AZURE_WEBAPP_RESOURCE_GROUP"
+            exit 1
+          fi
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Configure startup command
+        env:
+          AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+          AZURE_WEBAPP_RESOURCE_GROUP: ${{ secrets.AZURE_WEBAPP_RESOURCE_GROUP }}
+        run: |
+          az webapp config set \
+            --resource-group "$AZURE_WEBAPP_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --startup-file "node server.js" \
+            --output none
+
+      - name: Deploy zip package
+        env:
+          AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+          AZURE_WEBAPP_RESOURCE_GROUP: ${{ secrets.AZURE_WEBAPP_RESOURCE_GROUP }}
+        run: |
+          az webapp deploy \
+            --resource-group "$AZURE_WEBAPP_RESOURCE_GROUP" \
+            --name "$AZURE_WEBAPP_NAME" \
+            --src-path "webapp.zip" \
+            --type zip \
+            --async false
+
+      - name: Show live URL
+        env:
+          AZURE_WEBAPP_NAME: ${{ secrets.AZURE_WEBAPP_NAME }}
+        run: echo "https://${AZURE_WEBAPP_NAME}.azurewebsites.net"

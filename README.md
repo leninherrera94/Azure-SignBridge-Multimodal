@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Deploy to Azure Web App (GitHub Actions)
+
+This repository includes a workflow for Azure Web App deployment:
+
+- Workflow file: `.github/workflows/azure-webapp-lh-dev.yml`
+- Trigger branch: `lh_dev`
+- Packaging mode: Next.js `standalone` output (`server.js`)
+
+### Required GitHub secrets (OIDC)
+
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+- `AZURE_WEBAPP_NAME`
+- `AZURE_WEBAPP_RESOURCE_GROUP`
+
+### Runtime app settings
+
+Set runtime settings in **Azure Portal > App Service > Configuration** (not in source control). Keep secrets in Key Vault references as defined in infrastructure.
