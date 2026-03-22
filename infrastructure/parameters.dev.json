@@ -9,7 +9,7 @@
       "value": "eastus2"
     },
     "deploymentPrincipalObjectId": {
-      "value": "<YOUR-ENTRA-OBJECT-ID>"
+      "value": "6321d585-4b9b-44c1-9bfb-bb7bdcd20162"
     }
   }
 }

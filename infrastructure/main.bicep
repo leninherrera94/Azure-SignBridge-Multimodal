@@ -44,6 +44,7 @@ var signalRName        = take('${prefix}-signalr-${env}-${uniqueSuffix}', 63)
 var functionAppName    = take('${prefix}-func-${env}-${uniqueSuffix}', 60)
 var appServiceName     = take('${prefix}-app-${env}-${uniqueSuffix}', 60)
 var cosmosAccountName  = take('${prefix}-cosmos-${env}-${uniqueSuffix}', 44)
+var apimName           = take('${prefix}-apim-${env}-${uniqueSuffix}', 50)
 var aiServicesName     = take('${prefix}-aisvc-${env}-${uniqueSuffix}', 64)
 var foundryHubName     = take('${prefix}-hub-${env}-${uniqueSuffix}', 64)
 var foundryProjectName = take('${prefix}-proj-${env}-${uniqueSuffix}', 64)
@@ -52,7 +53,7 @@ var foundryProjectEndpoint = 'https://${foundryProjectName}.services.ai.azure.co
 
 // ─── Built-in Role Definition IDs ─────────────────────────────────────────────
 
-var roleKeyVaultSecretsUser      = '4633458b-17de-408a-b874-0445c86b69e0'
+var roleKeyVaultSecretsUser      = '4633458b-17de-408a-b874-0445c86b69e6'
 var roleStorageBlobDataContrib   = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 // Cosmos DB SQL built-in data contributor (data-plane RBAC, not ARM)
 var cosmosBuiltinDataContrib     = '00000000-0000-0000-0000-000000000002'
@@ -100,7 +101,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableRbacAuthorization:      true
     enableSoftDelete:             true
     softDeleteRetentionInDays:    environment == 'prod' ? 90 : 7
-    enablePurgeProtection:        environment == 'prod' ? true : false
+    enablePurgeProtection:        true
     publicNetworkAccess:          'Enabled'
     networkAcls: {
       defaultAction: 'Allow'
@@ -294,7 +295,7 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
 // }
 
 // 5c. Microsoft Foundry Hub
-resource foundryHub 'Microsoft.MachineLearningServices/workspaces@2026-01-01-preview' = {
+resource foundryHub 'Microsoft.MachineLearningServices/workspaces@2025-12-01' = {
   name:     foundryHubName
   location: location
   tags:     tags
@@ -313,7 +314,7 @@ resource foundryHub 'Microsoft.MachineLearningServices/workspaces@2026-01-01-pre
 }
 
 // 5d. Microsoft Foundry Project (linked to Hub)
-resource foundryProject 'Microsoft.MachineLearningServices/workspaces@2026-01-01-preview' = {
+resource foundryProject 'Microsoft.MachineLearningServices/workspaces@2025-12-01' = {
   name:     foundryProjectName
   location: location
   tags:     tags
@@ -330,7 +331,7 @@ resource foundryProject 'Microsoft.MachineLearningServices/workspaces@2026-01-01
 }
 
 // 5e. Foundry Project connection to unified AI Services
-resource foundryAiConnection 'Microsoft.MachineLearningServices/workspaces/connections@2026-01-01-preview' = {
+resource foundryAiConnection 'Microsoft.MachineLearningServices/workspaces/connections@2025-12-01' = {
   parent: foundryProject
   name:   foundryConnectionName
   properties: {
@@ -502,7 +503,7 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
-  name:     '${prefix}-apim-${env}'
+  name:     apimName
   location: location
   tags:     tags
   sku: {
