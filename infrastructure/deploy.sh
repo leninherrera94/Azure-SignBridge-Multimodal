@@ -72,7 +72,7 @@ if [ "${ENV}" = "dev" ]; then
   cat >> "${OUTPUT_FILE}" << EOF
 AZURE_OPENAI_ENDPOINT=${OPENAI_ENDPOINT}
 AZURE_OPENAI_KEY=<fetch-from-key-vault>
-AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_DEPLOYMENT=gpt-4o-mini
 AZURE_SPEECH_KEY=<fetch-from-key-vault>
 AZURE_SPEECH_REGION=eastus2
 AZURE_CONTENT_SAFETY_ENDPOINT=<see-outputs>
@@ -89,7 +89,7 @@ EOF
 
   echo "📝 .env.local written to ${OUTPUT_FILE}"
   echo "   Note: replace <fetch-from-key-vault> values using:"
-  echo "   az keyvault secret show --vault-name signbridge-kv-dev --name <secret-name> --query value -o tsv"
+  echo "   az keyvault secret show --vault-name <key-vault-name-from-deployment> --name <secret-name> --query value -o tsv"
 fi
 
 echo ""

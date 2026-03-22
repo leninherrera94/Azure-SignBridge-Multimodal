@@ -24,6 +24,7 @@ param deploymentPrincipalObjectId string
 
 var prefix = 'signbridge'
 var env    = environment
+var uniqueSuffix = toLower(take(uniqueString(resourceGroup().id), 6))
 
 var tags = {
   project:   'signbridge-ai'
@@ -32,12 +33,27 @@ var tags = {
   env:       env
 }
 
-// Storage account names must be ≤24 chars, lowercase, alphanumeric only
-var storageAccountName = '${prefix}st${env}'        // signbridgestdev  (16)
-var funcStorageName    = '${prefix}funcst${env}'    // signbridgefuncstdev (19)
+// Global-unique names for multi-account portability
+// Storage account names: lowercase alphanumeric only and <= 24 chars
+var storageAccountName = take('${prefix}st${env}${uniqueSuffix}', 24)
+var funcStorageName    = take('${prefix}funcst${env}${uniqueSuffix}', 24)
 
-// Cognitive Services SKU — S0 for prod to handle load; F0 (free) dev where available
-var cogSku = environment == 'prod' ? 'S0' : 'S0'   // F0 lacks most endpoints; keep S0
+// Global resources with DNS/name uniqueness requirements
+var keyVaultName       = take('${prefix}-kv-${env}-${uniqueSuffix}', 24)
+var openAiName         = take('${prefix}-openai-${env}-${uniqueSuffix}', 64)
+var speechName         = take('${prefix}-speech-${env}-${uniqueSuffix}', 64)
+var visionName         = take('${prefix}-vision-${env}-${uniqueSuffix}', 64)
+var translatorName     = take('${prefix}-translator-${env}-${uniqueSuffix}', 64)
+var contentSafetyName  = take('${prefix}-contentsafety-${env}-${uniqueSuffix}', 64)
+var languageName       = take('${prefix}-language-${env}-${uniqueSuffix}', 64)
+var signalRName        = take('${prefix}-signalr-${env}-${uniqueSuffix}', 63)
+var functionAppName    = take('${prefix}-func-${env}-${uniqueSuffix}', 60)
+var appServiceName     = take('${prefix}-app-${env}-${uniqueSuffix}', 60)
+var cosmosAccountName  = take('${prefix}-cosmos-${env}-${uniqueSuffix}', 44)
+
+// Cognitive Services SKUs
+var cogSku = 'S0'
+var translatorSku = 'S1'
 
 // ─── Built-in Role Definition IDs ─────────────────────────────────────────────
 
@@ -80,7 +96,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name:     '${prefix}-kv-${env}'
+  name:     keyVaultName
   location: location
   tags:     tags
   properties: {
@@ -162,7 +178,7 @@ resource funcStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-02-15-preview' = {
-  name:     '${prefix}-cosmos-${env}'
+  name:     cosmosAccountName
   location: location
   tags:     tags
   kind:     'GlobalDocumentDB'
@@ -249,15 +265,15 @@ resource cosmosRooms 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/contain
 // 5. AZURE AI — Cognitive Services
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// 5a. Azure OpenAI  (NOTE: requires approved subscription; region must support GPT-4o)
+// 5a. Azure OpenAI  (NOTE: requires approved subscription; region must support GPT-4o-mini)
 resource openAIService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-openai-${env}'
+  name:     openAiName
   location: location       // eastus2 supports gpt-4o
   tags:     tags
   kind:     'OpenAI'
   sku:      { name: 'S0' }
   properties: {
-    customSubDomainName:  '${prefix}-openai-${env}'
+    customSubDomainName:  openAiName
     publicNetworkAccess:  'Enabled'
     networkAcls:          { defaultAction: 'Allow' }
     disableLocalAuth:     false
@@ -266,16 +282,16 @@ resource openAIService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
 
 resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-04-01-preview' = {
   parent: openAIService
-  name:   'gpt-4o'
+  name:   'gpt-4o-mini'
   sku: {
     name:     'GlobalStandard'
-    capacity: environment == 'prod' ? 100 : 10   // TPM in thousands
+    capacity: 1
   }
   properties: {
     model: {
       format:  'OpenAI'
-      name:    'gpt-4o'
-      version: '2024-11-20'
+      name:    'gpt-4o-mini'
+      version: '2024-07-18'
     }
     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
   }
@@ -283,13 +299,13 @@ resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
 
 // 5b. Speech Services
 resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-speech-${env}'
+  name:     speechName
   location: location
   tags:     tags
   kind:     'SpeechServices'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-speech-${env}'
+    customSubDomainName: speechName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -297,13 +313,13 @@ resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
 
 // 5c. Computer Vision
 resource visionService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-vision-${env}'
+  name:     visionName
   location: location
   tags:     tags
   kind:     'ComputerVision'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-vision-${env}'
+    customSubDomainName: visionName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -311,13 +327,13 @@ resource visionService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
 
 // 5d. Translator  (global resource — location must be 'global')
 resource translatorService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-translator-${env}'
+  name:     translatorName
   location: 'global'
   tags:     tags
   kind:     'TextTranslation'
-  sku:      { name: cogSku }
+  sku:      { name: translatorSku }
   properties: {
-    customSubDomainName: '${prefix}-translator-${env}'
+    customSubDomainName: translatorName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -325,13 +341,13 @@ resource translatorService 'Microsoft.CognitiveServices/accounts@2024-04-01-prev
 
 // 5e. Content Safety
 resource contentSafetyService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-contentsafety-${env}'
+  name:     contentSafetyName
   location: location
   tags:     tags
   kind:     'ContentSafety'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-contentsafety-${env}'
+    customSubDomainName: contentSafetyName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -339,13 +355,13 @@ resource contentSafetyService 'Microsoft.CognitiveServices/accounts@2024-04-01-p
 
 // 5f. Azure AI Language (Text Analytics)
 resource languageService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-language-${env}'
+  name:     languageName
   location: location
   tags:     tags
   kind:     'TextAnalytics'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-language-${env}'
+    customSubDomainName: languageName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -356,7 +372,7 @@ resource languageService 'Microsoft.CognitiveServices/accounts@2024-04-01-previe
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource signalRService 'Microsoft.SignalRService/signalR@2023-02-01' = {
-  name:     '${prefix}-signalr-${env}'
+  name:     signalRName
   location: location
   tags:     tags
   sku: {
@@ -426,7 +442,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
-  name:     '${prefix}-func-${env}'
+  name:     functionAppName
   location: location
   tags:     tags
   kind:     'functionapp,linux'
@@ -451,6 +467,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
         // Key Vault references — resolved at runtime via managed identity
         { name: 'AZURE_OPENAI_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-endpoint)' }
         { name: 'AZURE_OPENAI_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-key)' }
+        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: 'gpt-4o-mini' }
         { name: 'AZURE_SPEECH_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-speech-key)' }
         { name: 'AZURE_SPEECH_REGION',      value: location }
         { name: 'AZURE_VISION_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-vision-endpoint)' }
@@ -464,7 +481,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
         { name: 'AZURE_COSMOS_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-cosmos-endpoint)' }
         { name: 'AZURE_STORAGE_CONNECTION_STRING', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-storage-connection-string)' }
       ]
-      cors: { allowedOrigins: ['https://${prefix}-app-${env}.azurewebsites.net'] }
+      cors: { allowedOrigins: ['https://${appServiceName}.azurewebsites.net'] }
     }
   }
 }
@@ -474,7 +491,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource appService 'Microsoft.Web/sites@2023-01-01' = {
-  name:     '${prefix}-app-${env}'
+  name:     appServiceName
   location: location
   tags:     tags
   kind:     'app,linux'
@@ -495,7 +512,7 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
         // Key Vault references
         { name: 'AZURE_OPENAI_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-endpoint)' }
         { name: 'AZURE_OPENAI_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-key)' }
-        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: 'gpt-4o' }
+        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: 'gpt-4o-mini' }
         { name: 'AZURE_SPEECH_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-speech-key)' }
         { name: 'AZURE_SPEECH_REGION',      value: location }
         { name: 'AZURE_VISION_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-vision-endpoint)' }
@@ -736,7 +753,7 @@ output functionAppUrl string = 'https://${functionApp.properties.defaultHostName
 @description('Azure OpenAI endpoint')
 output openAiEndpoint string = openAIService.properties.endpoint
 
-@description('GPT-4o deployment name')
+@description('GPT-4o-mini deployment name')
 output openAiDeployment string = gpt4oDeployment.name
 
 @description('Azure Speech Services region')

@@ -3,7 +3,7 @@
 # deploy-app.sh — Build & deploy SignBridge AI to Azure App Service
 #
 # Usage:
-#   ./infrastructure/deploy-app.sh [dev|prod]
+#   ./infrastructure/deploy-app.sh [dev|prod] [resource-group] [app-service-name]
 #
 # Requirements:
 #   - az CLI logged in  (az login)
@@ -13,23 +13,34 @@
 # Example:
 #   AZURE_RESOURCE_GROUP=signbridge-rg ./infrastructure/deploy-app.sh dev
 #   ./infrastructure/deploy-app.sh prod signbridge-prod-rg
+#   ./infrastructure/deploy-app.sh dev signbridge-rg-dev signbridge-app-dev-abc123
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 # ── Args ──────────────────────────────────────────────────────────────────────
 ENV="${1:-dev}"
 RG="${2:-${AZURE_RESOURCE_GROUP:-signbridge-rg}}"
-APP_NAME="signbridge-app-${ENV}"
+APP_NAME="${3:-${AZURE_APP_NAME:-}}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${REPO_ROOT}/.next/standalone"
 PACKAGE_DIR="${REPO_ROOT}/.deploy"
 ZIP_PATH="${REPO_ROOT}/signbridge-app.zip"
 
+if [ -z "${APP_NAME}" ]; then
+  APP_NAME="$(az webapp list --resource-group "${RG}" --query "[?contains(name, 'signbridge-app-${ENV}')].name | [0]" -o tsv)"
+fi
+
+if [ -z "${APP_NAME}" ]; then
+  echo "✗ Could not resolve App Service name in resource group ${RG}."
+  echo "  Pass it explicitly as third argument: ./infrastructure/deploy-app.sh ${ENV} ${RG} <app-service-name>"
+  exit 1
+fi
+
 echo "╔══════════════════════════════════════════════════════════════════╗"
 echo "║  SignBridge AI — App Service Deploy                             ║"
-echo "║  Environment : ${ENV}                                            "
-echo "║  App Service : ${APP_NAME}                                       "
-echo "║  Resource Grp: ${RG}                                             "
+echo "║  Environment : ${ENV}                                            ║"
+echo "║  App Service : ${APP_NAME}                                       ║"
+echo "║  Resource Grp: ${RG}                                             ║"
 echo "╚══════════════════════════════════════════════════════════════════╝"
 
 # ── 1. Build ──────────────────────────────────────────────────────────────────
