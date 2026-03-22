@@ -276,22 +276,22 @@ resource aiServices 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
 }
 
 // 5b. OpenAI model deployment on unified AI Services
-resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
-  parent: aiServices
-  name:   'gpt-4o-mini'
-  sku: {
-    name:     'GlobalStandard'
-    capacity: 1
-  }
-  properties: {
-    model: {
-      format:  'OpenAI'
-      name:    'gpt-4o-mini'
-      version: '2024-07-18'
-    }
-    versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
-  }
-}
+// resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+//   parent: aiServices
+//   name:   'gpt-4o-mini'
+//   sku: {
+//     name:     'GlobalStandard'
+//     capacity: 1
+//   }
+//   properties: {
+//     model: {
+//       format:  'OpenAI'
+//       name:    'gpt-4o-mini'
+//       version: '2024-07-18'
+//     }
+//     versionUpgradeOption: 'OnceNewDefaultVersionAvailable'
+//   }
+// }
 
 // 5c. Microsoft Foundry Hub
 resource foundryHub 'Microsoft.MachineLearningServices/workspaces@2026-01-01-preview' = {
@@ -526,22 +526,22 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
 // 12. KEY VAULT SECRETS — Store all service credentials
 // ═══════════════════════════════════════════════════════════════════════════════
 
-resource secretOpenAiEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-ai-project-endpoint'
-  properties: { value: foundryProjectEndpoint }
-}
+// resource secretOpenAiEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+//   parent: keyVault
+//   name:   'azure-ai-project-endpoint'
+//   properties: { value: foundryProjectEndpoint }
+// }
 
-resource secretOpenAiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-ai-project-connection'
-  properties: { value: foundryAiConnection.name }
-}
+// resource secretOpenAiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+//   parent: keyVault
+//   name:   'azure-ai-project-connection'
+//   properties: { value: foundryAiConnection.name }
+// }
 
 resource secretSpeechKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
   name:   'azure-openai-deployment'
-  properties: { value: gpt4oDeployment.name }
+  properties: { value: 'gpt-4o-mini' }
 }
 
 resource secretSignalRConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
@@ -695,7 +695,7 @@ output functionAppUrl string = 'https://${functionApp.properties.defaultHostName
 output openAiEndpoint string = aiServices.properties.endpoint
 
 @description('GPT-4o-mini deployment name')
-output openAiDeployment string = gpt4oDeployment.name
+output openAiDeployment string = 'gpt-4o-mini'
 
 @description('Foundry Project endpoint')
 output foundryProjectEndpoint string = foundryProjectEndpoint
