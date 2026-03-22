@@ -40,20 +40,15 @@ var funcStorageName    = take('${prefix}funcst${env}${uniqueSuffix}', 24)
 
 // Global resources with DNS/name uniqueness requirements
 var keyVaultName       = take('${prefix}-kv-${env}-${uniqueSuffix}', 24)
-var openAiName         = take('${prefix}-openai-${env}-${uniqueSuffix}', 64)
-var speechName         = take('${prefix}-speech-${env}-${uniqueSuffix}', 64)
-var visionName         = take('${prefix}-vision-${env}-${uniqueSuffix}', 64)
-var translatorName     = take('${prefix}-translator-${env}-${uniqueSuffix}', 64)
-var contentSafetyName  = take('${prefix}-contentsafety-${env}-${uniqueSuffix}', 64)
-var languageName       = take('${prefix}-language-${env}-${uniqueSuffix}', 64)
 var signalRName        = take('${prefix}-signalr-${env}-${uniqueSuffix}', 63)
 var functionAppName    = take('${prefix}-func-${env}-${uniqueSuffix}', 60)
 var appServiceName     = take('${prefix}-app-${env}-${uniqueSuffix}', 60)
 var cosmosAccountName  = take('${prefix}-cosmos-${env}-${uniqueSuffix}', 44)
-
-// Cognitive Services SKUs
-var cogSku = 'S0'
-var translatorSku = 'S1'
+var aiServicesName     = take('${prefix}-aisvc-${env}-${uniqueSuffix}', 64)
+var foundryHubName     = take('${prefix}-hub-${env}-${uniqueSuffix}', 64)
+var foundryProjectName = take('${prefix}-proj-${env}-${uniqueSuffix}', 64)
+var foundryConnectionName = 'ai-services-default'
+var foundryProjectEndpoint = 'https://${foundryProjectName}.services.ai.azure.com'
 
 // ─── Built-in Role Definition IDs ─────────────────────────────────────────────
 
@@ -265,23 +260,24 @@ resource cosmosRooms 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/contain
 // 5. AZURE AI — Cognitive Services
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// 5a. Azure OpenAI  (NOTE: requires approved subscription; region must support GPT-4o-mini)
-resource openAIService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     openAiName
-  location: location       // eastus2 supports gpt-4o
+// 5a. Unified AI Services account (Microsoft Foundry-compatible)
+resource aiServices 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
+  name:     aiServicesName
+  location: location
   tags:     tags
-  kind:     'OpenAI'
+  kind:     'AIServices'
   sku:      { name: 'S0' }
   properties: {
-    customSubDomainName:  openAiName
-    publicNetworkAccess:  'Enabled'
-    networkAcls:          { defaultAction: 'Allow' }
-    disableLocalAuth:     false
+    customSubDomainName: aiServicesName
+    publicNetworkAccess: 'Enabled'
+    networkAcls:         { defaultAction: 'Allow' }
+    disableLocalAuth:    true
   }
 }
 
-resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-04-01-preview' = {
-  parent: openAIService
+// 5b. OpenAI model deployment on unified AI Services
+resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+  parent: aiServices
   name:   'gpt-4o-mini'
   sku: {
     name:     'GlobalStandard'
@@ -297,73 +293,55 @@ resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
   }
 }
 
-// 5b. Speech Services
-resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     speechName
+// 5c. Microsoft Foundry Hub
+resource foundryHub 'Microsoft.MachineLearningServices/workspaces@2026-01-01-preview' = {
+  name:     foundryHubName
   location: location
   tags:     tags
-  kind:     'SpeechServices'
-  sku:      { name: cogSku }
+  kind:     'Hub'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
-    customSubDomainName: speechName
+    friendlyName: '${prefix}-foundry-hub-${env}'
+    description:  'Foundry Hub for SignBridge AI'
+    keyVault:     keyVault.id
+    storageAccount: mainStorage.id
+    applicationInsights: appInsights.id
     publicNetworkAccess: 'Enabled'
-    networkAcls:         { defaultAction: 'Allow' }
   }
 }
 
-// 5c. Computer Vision
-resource visionService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     visionName
+// 5d. Microsoft Foundry Project (linked to Hub)
+resource foundryProject 'Microsoft.MachineLearningServices/workspaces@2026-01-01-preview' = {
+  name:     foundryProjectName
   location: location
   tags:     tags
-  kind:     'ComputerVision'
-  sku:      { name: cogSku }
+  kind:     'Project'
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
-    customSubDomainName: visionName
+    friendlyName: '${prefix}-foundry-project-${env}'
+    description:  'Foundry Project for SignBridge AI workloads'
+    hubResourceId: foundryHub.id
     publicNetworkAccess: 'Enabled'
-    networkAcls:         { defaultAction: 'Allow' }
   }
 }
 
-// 5d. Translator  (global resource — location must be 'global')
-resource translatorService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     translatorName
-  location: 'global'
-  tags:     tags
-  kind:     'TextTranslation'
-  sku:      { name: translatorSku }
+// 5e. Foundry Project connection to unified AI Services
+resource foundryAiConnection 'Microsoft.MachineLearningServices/workspaces/connections@2026-01-01-preview' = {
+  parent: foundryProject
+  name:   foundryConnectionName
   properties: {
-    customSubDomainName: translatorName
-    publicNetworkAccess: 'Enabled'
-    networkAcls:         { defaultAction: 'Allow' }
-  }
-}
-
-// 5e. Content Safety
-resource contentSafetyService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     contentSafetyName
-  location: location
-  tags:     tags
-  kind:     'ContentSafety'
-  sku:      { name: cogSku }
-  properties: {
-    customSubDomainName: contentSafetyName
-    publicNetworkAccess: 'Enabled'
-    networkAcls:         { defaultAction: 'Allow' }
-  }
-}
-
-// 5f. Azure AI Language (Text Analytics)
-resource languageService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     languageName
-  location: location
-  tags:     tags
-  kind:     'TextAnalytics'
-  sku:      { name: cogSku }
-  properties: {
-    customSubDomainName: languageName
-    publicNetworkAccess: 'Enabled'
-    networkAcls:         { defaultAction: 'Allow' }
+    category: 'AIServices'
+    target: aiServices.properties.endpoint
+    authType: 'AAD'
+    isSharedToAll: true
+    metadata: {
+      ResourceId: aiServices.id
+      ApiType: 'AzureAI'
+    }
   }
 }
 
@@ -464,19 +442,11 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
         { name: 'FUNCTIONS_WORKER_RUNTIME',    value: 'node' }
         { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~20' }
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
-        // Key Vault references — resolved at runtime via managed identity
-        { name: 'AZURE_OPENAI_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-endpoint)' }
-        { name: 'AZURE_OPENAI_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-key)' }
-        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: 'gpt-4o-mini' }
-        { name: 'AZURE_SPEECH_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-speech-key)' }
-        { name: 'AZURE_SPEECH_REGION',      value: location }
-        { name: 'AZURE_VISION_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-vision-endpoint)' }
-        { name: 'AZURE_VISION_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-vision-key)' }
-        { name: 'AZURE_TRANSLATOR_KEY',     value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-translator-key)' }
-        { name: 'AZURE_CONTENT_SAFETY_ENDPOINT', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-contentsafety-endpoint)' }
-        { name: 'AZURE_CONTENT_SAFETY_KEY', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-contentsafety-key)' }
-        { name: 'AZURE_LANGUAGE_ENDPOINT',  value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-language-endpoint)' }
-        { name: 'AZURE_LANGUAGE_KEY',       value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-language-key)' }
+        // Foundry Project settings (Managed Identity + Project endpoint)
+        { name: 'AZURE_AI_PROJECT_ENDPOINT', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-ai-project-endpoint)' }
+        { name: 'AZURE_AI_PROJECT_CONNECTION_NAME', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-ai-project-connection)' }
+        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-deployment)' }
+        { name: 'AZURE_FOUNDRY_AUTH_MODE',  value: 'ManagedIdentity' }
         { name: 'AZURE_SIGNALR_CONNECTION_STRING', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-signalr-connection-string)' }
         { name: 'AZURE_COSMOS_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-cosmos-endpoint)' }
         { name: 'AZURE_STORAGE_CONNECTION_STRING', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-storage-connection-string)' }
@@ -509,20 +479,11 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
       appSettings: [
         { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsights.properties.ConnectionString }
         { name: 'NEXT_PUBLIC_SIGNALR_URL',  value: 'https://${signalRService.name}.service.signalr.net' }
-        // Key Vault references
-        { name: 'AZURE_OPENAI_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-endpoint)' }
-        { name: 'AZURE_OPENAI_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-key)' }
-        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: 'gpt-4o-mini' }
-        { name: 'AZURE_SPEECH_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-speech-key)' }
-        { name: 'AZURE_SPEECH_REGION',      value: location }
-        { name: 'AZURE_VISION_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-vision-endpoint)' }
-        { name: 'AZURE_VISION_KEY',         value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-vision-key)' }
-        { name: 'AZURE_TRANSLATOR_KEY',     value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-translator-key)' }
-        { name: 'AZURE_TRANSLATOR_REGION',  value: 'global' }
-        { name: 'AZURE_CONTENT_SAFETY_ENDPOINT', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-contentsafety-endpoint)' }
-        { name: 'AZURE_CONTENT_SAFETY_KEY', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-contentsafety-key)' }
-        { name: 'AZURE_LANGUAGE_ENDPOINT',  value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-language-endpoint)' }
-        { name: 'AZURE_LANGUAGE_KEY',       value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-language-key)' }
+        // Foundry Project settings (Managed Identity + Project endpoint)
+        { name: 'AZURE_AI_PROJECT_ENDPOINT', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-ai-project-endpoint)' }
+        { name: 'AZURE_AI_PROJECT_CONNECTION_NAME', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-ai-project-connection)' }
+        { name: 'AZURE_OPENAI_DEPLOYMENT',  value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-openai-deployment)' }
+        { name: 'AZURE_FOUNDRY_AUTH_MODE',  value: 'ManagedIdentity' }
         { name: 'WEBSITES_PORT',            value: '3000' }
         { name: 'AZURE_SIGNALR_CONNECTION_STRING', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-signalr-connection-string)' }
         { name: 'AZURE_COMMUNICATION_CONNECTION_STRING', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-comm-connection-string)' }
@@ -567,62 +528,20 @@ resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
 
 resource secretOpenAiEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
-  name:   'azure-openai-endpoint'
-  properties: { value: openAIService.properties.endpoint }
+  name:   'azure-ai-project-endpoint'
+  properties: { value: foundryProjectEndpoint }
 }
 
 resource secretOpenAiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
-  name:   'azure-openai-key'
-  properties: { value: openAIService.listKeys().key1 }
+  name:   'azure-ai-project-connection'
+  properties: { value: foundryAiConnection.name }
 }
 
 resource secretSpeechKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   parent: keyVault
-  name:   'azure-speech-key'
-  properties: { value: speechService.listKeys().key1 }
-}
-
-resource secretVisionEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-vision-endpoint'
-  properties: { value: visionService.properties.endpoint }
-}
-
-resource secretVisionKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-vision-key'
-  properties: { value: visionService.listKeys().key1 }
-}
-
-resource secretTranslatorKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-translator-key'
-  properties: { value: translatorService.listKeys().key1 }
-}
-
-resource secretContentSafetyEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-contentsafety-endpoint'
-  properties: { value: contentSafetyService.properties.endpoint }
-}
-
-resource secretContentSafetyKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-contentsafety-key'
-  properties: { value: contentSafetyService.listKeys().key1 }
-}
-
-resource secretLanguageEndpoint 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-language-endpoint'
-  properties: { value: languageService.properties.endpoint }
-}
-
-resource secretLanguageKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name:   'azure-language-key'
-  properties: { value: languageService.listKeys().key1 }
+  name:   'azure-openai-deployment'
+  properties: { value: gpt4oDeployment.name }
 }
 
 resource secretSignalRConnectionString 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
@@ -740,6 +659,28 @@ resource apimKvRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
+// Key Vault Secrets User → Foundry Hub
+resource foundryHubKvRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name:  guid(keyVault.id, foundryHub.id, roleKeyVaultSecretsUser)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleKeyVaultSecretsUser)
+    principalId:      foundryHub.identity.principalId
+    principalType:    'ServicePrincipal'
+  }
+}
+
+// Key Vault Secrets User → Foundry Project
+resource foundryProjectKvRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name:  guid(keyVault.id, foundryProject.id, roleKeyVaultSecretsUser)
+  scope: keyVault
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roleKeyVaultSecretsUser)
+    principalId:      foundryProject.identity.principalId
+    principalType:    'ServicePrincipal'
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // OUTPUTS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -750,23 +691,20 @@ output appServiceUrl string = 'https://${appService.properties.defaultHostName}'
 @description('Function App URL for serverless API handlers')
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
 
-@description('Azure OpenAI endpoint')
-output openAiEndpoint string = openAIService.properties.endpoint
+@description('Unified AI Services endpoint')
+output openAiEndpoint string = aiServices.properties.endpoint
 
 @description('GPT-4o-mini deployment name')
 output openAiDeployment string = gpt4oDeployment.name
 
-@description('Azure Speech Services region')
-output speechRegion string = speechService.location
+@description('Foundry Project endpoint')
+output foundryProjectEndpoint string = foundryProjectEndpoint
 
-@description('Azure Computer Vision endpoint')
-output visionEndpoint string = visionService.properties.endpoint
+@description('Foundry Hub resource ID')
+output foundryHubResourceId string = foundryHub.id
 
-@description('Azure AI Language endpoint')
-output languageEndpoint string = languageService.properties.endpoint
-
-@description('Azure Content Safety endpoint')
-output contentSafetyEndpoint string = contentSafetyService.properties.endpoint
+@description('Foundry Project resource ID')
+output foundryProjectResourceId string = foundryProject.id
 
 @description('SignalR Service URL for client connections')
 output signalRUrl string = 'https://${signalRService.name}.service.signalr.net'
