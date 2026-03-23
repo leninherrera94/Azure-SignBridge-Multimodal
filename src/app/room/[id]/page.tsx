@@ -45,17 +45,16 @@ const KNOWN_SIGN_IDS = new Set([
   "sorry", "good", "i_love_you", "stop",
   "1", "2", "3", "4", "5",
   "want", "eat", "water", "who", "what", "where", "when",
-  "why", "how", "go", "more", "finish", "play", "work", "learn"
+  "why", "how", "go", "more", "finish", "play", "work", "learn",
+  "the", "of", "and", "a", "to", "in", "is", "you", "that", "it",
+  "he", "was", "for", "on", "are", "as", "with", "his", "they", "i"
 ]);
 
 const SKIP_WORDS_SET = new Set([
   // English
-  "a","an","the","is","am","are","was","were","be","been",
-  "i","it","this","that","do","did","does","to","of","and","in","at","on",
+  "am","were","be","been","this","do","did","does","at",
   // Spanish
-  "el","la","los","las","un","una","unos","unas","es","soy","eres","somos","son",
-  "fui","fue","fueron","ser","estar","yo","esto","eso","hacer","hizo","hacen",
-  "a","de","y","en","por","para","con","sobre",
+  "estar","ser","esto","hacer","hizo","hacen","por",
 ]);
 
 const KNOWN_SIGNS_MAP: Record<string, string> = {
@@ -91,6 +90,10 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   work: "work", works: "work", working: "work",
   learn: "learn", learns: "learn", learning: "learn",
 
+  the: "the", of: "of", and: "and", a: "a", an: "a", to: "to", in: "in", is: "is", you: "you",
+  that: "that", it: "it", he: "he", was: "was", for: "for", on: "on",
+  are: "are", as: "as", with: "with", his: "his", they: "they", i: "i",
+
   // Spanish
   hola: "hello", buenas: "hello", saludos: "hello",
   gracias: "thank_you",
@@ -117,6 +120,23 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   jugar: "play", juego: "play", juegas: "play", juega: "play", jugamos: "play", juegan: "play",
   trabajo: "work", trabajar: "work", trabajas: "work", trabaja: "work", trabajamos: "work", trabajan: "work",
   aprender: "learn", aprendo: "learn", aprendes: "learn", aprende: "learn", aprendemos: "learn", aprenden: "learn",
+
+  el: "the", la: "the", los: "the", las: "the",
+  de: "of",
+  y: "and",
+  un: "a", una: "a", unos: "a", unas: "a",
+  hacia: "to",
+  en: "in", sobre: "on",
+  es: "is",
+  tu: "you", tú: "you", usted: "you", ustedes: "you",
+  eso: "that",
+  él: "he",
+  fui: "was", fue: "was", fueron: "was",
+  son: "are", eres: "are",
+  con: "with",
+  su: "his", sus: "his",
+  ellos: "they", ellas: "they",
+  yo: "i",
 };
 
 function clientLocalFallback(text: string): SignSequenceItem[] {
