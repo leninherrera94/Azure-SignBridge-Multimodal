@@ -19,12 +19,16 @@ const KNOWN_SIGNS = new Set([
   "each", "which", "she", "their", "if",
   // Phase 3 vocabulary
   "will", "up", "other", "about", "out", "many", "then", "so",
-  "some", "would", "make", "like", "into", "time", "look"
+  "some", "would", "make", "like", "into", "time", "look",
+  // Phase 4 vocabulary
+  "write", "see", "number", "way", "could", "people", "my", "than",
+  "first", "been", "call", "oil", "its", "now", "find", "long",
+  "down", "day", "did", "get", "come", "may", "part"
 ]);
 
 const SKIP_WORDS = new Set([
   // English
-  "am","were","been","do","did","does",
+  "am","were","do","does",
   // Spanish
   "hacer","hizo","hacen",
 ]);
@@ -105,7 +109,7 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   amo:"i_love_you", quiero:"want", quieres:"want", quiere:"want", queremos:"want", quieren:"want", deseo:"want",
   alto:"stop", para:"stop", detente:"stop", espera:"stop",
   uno:"1", dos:"2", tres:"3", cuatro:"4", cinco:"5",
-  comer: "eat", como: "how", comes: "eat", come: "eat", comen: "eat", comemos: "eat",
+  comer: "eat", como: "how", comen: "eat", comemos: "eat",
   cómo: "how",
   agua: "water", beber: "water", tomar: "water",
   quien: "who", quién: "who", quienes: "who", quiénes: "who",
@@ -180,6 +184,54 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   tiempo: "time", hora: "time",
   ha: "have", han: "have",
   mirar: "look", mira: "look", miro: "look", miras: "look", miran: "look", miramos: "look",
+
+  // Phase 4 (English)
+  write: "write", writes: "write", wrote: "write", writing: "write",
+  see: "see", sees: "see", saw: "see", seeing: "see",
+  number: "number", numbers: "number",
+  way: "way", ways: "way",
+  could: "could",
+  people: "people", person: "people",
+  my: "my", mine: "my",
+  than: "than",
+  first: "first",
+  been: "been",
+  call: "call", calls: "call", called: "call", calling: "call",
+  oil: "oil",
+  its: "its",
+  now: "now", currently: "now",
+  find: "find", finds: "find", found: "find", finding: "find",
+  long: "long",
+  down: "down",
+  day: "day", days: "day",
+  did: "did",
+  get: "get", gets: "get", got: "get", getting: "get",
+  come: "come", comes: "come", came: "come", coming: "come",
+  may: "may", maybe: "may",
+  part: "part", parts: "part",
+
+  // Phase 4 (Spanish)
+  escribir: "write", escribo: "write", escribes: "write", escribe: "write", escribimos: "write", escriben: "write",
+  ver: "see", veo: "see", ves: "see", ve: "see", vemos: "see", ven: "see", vi: "see",
+  numero: "number", número: "number", numeros: "number", números: "number",
+  camino: "way", manera: "way", forma: "way",
+  podría: "could",
+  gente: "people", personas: "people", persona: "people",
+  mi: "my", mis: "my",
+  primero: "first", primera: "first",
+  sido: "been", estado: "been",
+  llamar: "call", llamo: "call", llamas: "call", llama: "call", llamamos: "call", llaman: "call",
+  aceite: "oil",
+  ahora: "now", actualmente: "now", ya: "now",
+  encontrar: "find", encuentro: "find", encuentras: "find", encuentra: "find", encontramos: "find", encuentran: "find",
+  largo: "long", larga: "long",
+  abajo: "down",
+  dia: "day", día: "day", dias: "day", días: "day",
+  hice: "did", hicimos: "did", hicieron: "did",
+  obtener: "get", consigo: "get", consigues: "get", consigue: "get", conseguimos: "get", consiguen: "get",
+  venir: "come", vengo: "come", vienes: "come", viene: "come", venimos: "come", vienen: "come",
+  quizas: "may", quizás: "may", tal: "may", vez: "may",
+  parte: "part", partes: "part",
 };
 
 // ─── System prompt ────────────────────────────────────────────────────────────
@@ -189,7 +241,7 @@ const SYSTEM_PROMPT = `You are an ASL (American Sign Language) translation assis
 Given text in ANY language (e.g. English, Spanish), translate its meaning into a sequence of ASL signs and fingerspelling.
 
 AVAILABLE SIGNS (use these when possible):
-hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5, want, eat, water, who, what, where, when, why, how, go, more, finish, play, work, learn, the, of, and, a, to, in, is, you, that, it, he, was, for, on, are, as, with, his, they, i, at, be, this, have, from, or, had, by, word, but, all, we, your, can, said, there, use, each, which, she, their, if, will, up, other, about, out, many, then, so, some, would, make, like, into, time, look
+hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5, want, eat, water, who, what, where, when, why, how, go, more, finish, play, work, learn, the, of, and, a, to, in, is, you, that, it, he, was, for, on, are, as, with, his, they, i, at, be, this, have, from, or, had, by, word, but, all, we, your, can, said, there, use, each, which, she, their, if, will, up, other, about, out, many, then, so, some, would, make, like, into, time, look, write, see, number, way, could, people, my, than, first, been, call, oil, its, now, find, long, down, day, did, get, come, may, part
 
 RULES:
 1. Simplify text to ASL-friendly grammar (topic-comment structure) regardless of the input language.
