@@ -7,10 +7,36 @@ import SessionSummary, { type ChatMessage, type AISummaryResult } from "@/compon
 import ResponsibleAIPanel, { type AIDecision } from "@/components/ResponsibleAIPanel";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSignRecognition } from "@/hooks/useSignRecognition";
+import { useAcsCalling } from "@/hooks/useAcsCalling";
 import { SUPPORTED_LANGUAGES } from "@/lib/azure/speech";
 import type { SupportedLanguageCode } from "@/lib/azure/speech";
 import type { SignAvatarHandle } from "@/components/SignAvatar";
 import type { SignSequenceItem } from "@/lib/avatar/sign-animations";
+import { VideoStreamRenderer, RemoteVideoStream } from "@azure/communication-calling";
+
+export function RemoteParticipantVideo({ stream }: { stream: RemoteVideoStream }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let renderer: VideoStreamRenderer | null = null;
+    let view: any = null;
+    let mounted = true;
+    async function render() {
+      if (!containerRef.current) return;
+      renderer = new VideoStreamRenderer(stream);
+      view = await renderer.createView();
+      if (mounted && containerRef.current) {
+        containerRef.current.appendChild(view.target);
+      }
+    }
+    render();
+    return () => {
+      mounted = false;
+      view?.dispose();
+      renderer?.dispose();
+    };
+  }, [stream]);
+  return <div ref={containerRef} className="w-full h-full object-cover rounded-xl overflow-hidden" style={{ background: "#000" }} />;
+}
 
 // ─── Client-side local fallback ───────────────────────────────────────────────
 
@@ -331,6 +357,20 @@ export default function RoomPage({ params }: PageProps) {
     playingRef.current = false;
   }, []);
 
+  // ── ACS Data Channel ──────────────────────────────────────────────────────────
+  const handleDataChannelMessage = useCallback((payload: any) => {
+    if (payload.type === "chat") {
+      addMessage({ text: payload.text, mode: payload.mode, signs: payload.signs });
+      if (payload.sequence && payload.sequence.length > 0) {
+        setSignsCount((n: number) => n + payload.sequence.length);
+        seqQueue.current.push(payload.sequence);
+        drainQueue();
+      }
+    }
+  }, [addMessage, drainQueue]);
+
+  const { remoteStreams, error: acsError, toggleMic: txMic, toggleCam: txCam, sendData } = useAcsCalling(roomId, !!mode, handleDataChannelMessage);
+
   // ── Translate & enqueue ───────────────────────────────────────────────────────
   const handleNewUtterance = useCallback(
     async (text: string) => {
@@ -468,8 +508,17 @@ export default function RoomPage({ params }: PageProps) {
         seqQueue.current.push(sequence);
         drainQueue();
       }
+
+      // Broadcast to other peers via DataChannel
+      sendData({
+        type: "chat",
+        text,
+        mode: mode ?? "speak",
+        signs: signIds,
+        sequence
+      });
     },
-    [mode, addMessage, addDecision, drainQueue]
+    [mode, addMessage, addDecision, drainQueue, sendData]
   );
 
   // ── Chat input submit (used in type mode and chat tab) ────────────────────────
@@ -484,8 +533,8 @@ export default function RoomPage({ params }: PageProps) {
   // ── Mic toggle ────────────────────────────────────────────────────────────────
   function toggleMic() {
     if (mode !== "speak") return;
-    if (micMuted) { speech.startListening(); setMicMuted(false); }
-    else          { speech.stopListening();  setMicMuted(true);  }
+    if (micMuted) { speech.startListening(); setMicMuted(false); txMic(false); }
+    else          { speech.stopListening();  setMicMuted(true);  txMic(true);  }
   }
 
   // ── Cam toggle ────────────────────────────────────────────────────────────────
@@ -494,6 +543,9 @@ export default function RoomPage({ params }: PageProps) {
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       if (videoRef.current) videoRef.current.srcObject = null;
+      txCam(true);
+    } else {
+      txCam(false);
     }
     setCamOff((v) => !v);
   }
@@ -606,12 +658,15 @@ export default function RoomPage({ params }: PageProps) {
 
           {/* Video area */}
           <div
-            className="relative flex-1 rounded-xl overflow-hidden min-h-0"
-            style={{
-              background: "#000",
-              border: highContrast ? "2px solid #fff" : "1px solid rgba(255,255,255,0.08)",
-            }}
+            className={`relative flex-1 min-h-0 grid gap-2 ${remoteStreams.length > 0 ? "grid-cols-2" : "grid-cols-1"}`}
           >
+            <div
+              className="relative w-full h-full rounded-xl overflow-hidden"
+              style={{
+                background: "#000",
+                border: highContrast ? "2px solid #fff" : "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
             <video
               ref={videoRef}
               autoPlay
@@ -714,6 +769,11 @@ export default function RoomPage({ params }: PageProps) {
                 )}
               </div>
             )}
+            </div>
+
+            {remoteStreams.map((rs) => (
+              <RemoteParticipantVideo key={rs.userId} stream={rs.stream} />
+            ))}
           </div>
 
           {/* Controls row */}
