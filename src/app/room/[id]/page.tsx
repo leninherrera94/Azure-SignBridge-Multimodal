@@ -47,14 +47,15 @@ const KNOWN_SIGN_IDS = new Set([
   "want", "eat", "water", "who", "what", "where", "when",
   "why", "how", "go", "more", "finish", "play", "work", "learn",
   "the", "of", "and", "a", "to", "in", "is", "you", "that", "it",
-  "he", "was", "for", "on", "are", "as", "with", "his", "they", "i"
+  "he", "was", "for", "on", "are", "as", "with", "his", "they", "i",
+  "at", "be", "this", "have", "from", "or", "had", "by", "word"
 ]);
 
 const SKIP_WORDS_SET = new Set([
   // English
-  "am","were","be","been","this","do","did","does","at",
+  "am","were","been","do","did","does",
   // Spanish
-  "estar","ser","esto","hacer","hizo","hacen","por",
+  "hacer","hizo","hacen",
 ]);
 
 const KNOWN_SIGNS_MAP: Record<string, string> = {
@@ -93,13 +94,14 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   the: "the", of: "of", and: "and", a: "a", an: "a", to: "to", in: "in", is: "is", you: "you",
   that: "that", it: "it", he: "he", was: "was", for: "for", on: "on",
   are: "are", as: "as", with: "with", his: "his", they: "they", i: "i",
+  at: "at", be: "be", "this": "this", have: "have", from: "from", or: "or", had: "had", by: "by", word: "word",
 
   // Spanish
   hola: "hello", buenas: "hello", saludos: "hello",
   gracias: "thank_you",
   si: "yes", sí: "yes", claro: "yes",
   // "no" is already handled by English "no"
-  por: "please", favor: "please", 
+  favor: "please", 
   ayuda: "help", auxiliar: "help",
   perdon: "sorry", perdón: "sorry", lo: "sorry", siento: "sorry", disculpa: "sorry",
   bien: "good", bueno: "good", genial: "good", excelente: "good",
@@ -137,6 +139,15 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   su: "his", sus: "his",
   ellos: "they", ellas: "they",
   yo: "i",
+
+  ser: "be", estar: "be", sea: "be",
+  este: "this", esta: "this", esto: "this",
+  tener: "have", tengo: "have", tienes: "have", tiene: "have", tenemos: "have", tienen: "have",
+  desde: "from",
+  o: "or",
+  tuve: "had", tenía: "had", tuvimos: "had", tuvieron: "had",
+  por: "by",
+  palabra: "word", palabras: "word",
 };
 
 function clientLocalFallback(text: string): SignSequenceItem[] {
