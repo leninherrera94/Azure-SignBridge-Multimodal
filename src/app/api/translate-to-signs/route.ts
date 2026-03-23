@@ -16,7 +16,10 @@ const KNOWN_SIGNS = new Set([
   "he", "was", "for", "on", "are", "as", "with", "his", "they", "i",
   "at", "be", "this", "have", "from", "or", "had", "by", "word",
   "but", "all", "we", "your", "can", "said", "there", "use",
-  "each", "which", "she", "their", "if"
+  "each", "which", "she", "their", "if",
+  // Phase 3 vocabulary
+  "will", "up", "other", "about", "out", "many", "then", "so",
+  "some", "would", "make", "like", "into", "time", "look"
 ]);
 
 const SKIP_WORDS = new Set([
@@ -67,6 +70,28 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   not: "no",
   but: "but", all: "all", we: "we", your: "your", can: "can", said: "said",
   there: "there", use: "use", each: "each", which: "which", she: "she", their: "their", if: "if",
+
+  // Phase 3 (English)
+  will: "will",
+  up: "up",
+  other: "other",
+  about: "about",
+  out: "out", outside: "out",
+  many: "many",
+  then: "then",
+  them: "they",
+  these: "this",
+  so: "so",
+  some: "some",
+  her: "she", hers: "she",
+  would: "would",
+  make: "make", makes: "make", made: "make", making: "make",
+  like: "like", likes: "like", liked: "like", liking: "like",
+  him: "he",
+  into: "into",
+  time: "time",
+  has: "have",
+  look: "look", looks: "look", looking: "look", looked: "look",
 
   // Spanish
   hola:"hello", buenas:"hello", saludos:"hello",
@@ -134,6 +159,27 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   ella: "she",
   suyo: "their", suya: "their", suyos: "their", suyas: "their",
   si: "if",
+
+  // Phase 3 (Spanish)
+  voluntad: "will",
+  arriba: "up",
+  otro: "other", otra: "other", otros: "other", otras: "other",
+  acerca: "about",
+  fuera: "out", afuera: "out",
+  muchos: "many", muchas: "many",
+  entonces: "then", luego: "then",
+  les: "they",
+  estos: "this", estas: "this",
+  asi: "so", así: "so", tan: "so",
+  algunos: "some", algunas: "some", algo: "some",
+  haría: "would",
+  hacer: "make", hago: "make", haces: "make", hace: "make", hacemos: "make", hacen: "make", hizo: "make",
+  gustar: "like", gusta: "like", gustan: "like",
+  le: "he",
+  adentro: "into", dentro: "into",
+  tiempo: "time", hora: "time",
+  ha: "have", han: "have",
+  mirar: "look", mira: "look", miro: "look", miras: "look", miran: "look", miramos: "look",
 };
 
 // ─── System prompt ────────────────────────────────────────────────────────────
@@ -143,7 +189,7 @@ const SYSTEM_PROMPT = `You are an ASL (American Sign Language) translation assis
 Given text in ANY language (e.g. English, Spanish), translate its meaning into a sequence of ASL signs and fingerspelling.
 
 AVAILABLE SIGNS (use these when possible):
-hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5, want, eat, water, who, what, where, when, why, how, go, more, finish, play, work, learn, the, of, and, a, to, in, is, you, that, it, he, was, for, on, are, as, with, his, they, i, at, be, this, have, from, or, had, by, word, but, all, we, your, can, said, there, use, each, which, she, their, if
+hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5, want, eat, water, who, what, where, when, why, how, go, more, finish, play, work, learn, the, of, and, a, to, in, is, you, that, it, he, was, for, on, are, as, with, his, they, i, at, be, this, have, from, or, had, by, word, but, all, we, your, can, said, there, use, each, which, she, their, if, will, up, other, about, out, many, then, so, some, would, make, like, into, time, look
 
 RULES:
 1. Simplify text to ASL-friendly grammar (topic-comment structure) regardless of the input language.

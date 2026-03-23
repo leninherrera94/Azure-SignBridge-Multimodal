@@ -1171,8 +1171,193 @@ export const SIGN_ANIMATIONS: SignAnimation[] = [
       { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
     ]
   },
+  // ── 73. Will ──
+  {
+    id: "will", name: "Will", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [20,60,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: OPEN_HAND },
+      { time: 0.70, rightArm: { shoulder: [20,40,10], upperArm: [40,0,0], forearm: [100,-180,35], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 74. Up ──
+  {
+    id: "up", name: "Up", duration: 1200,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [90,-90,-45], hand: [0,0,0] }, rightHand: hand(90,0,90,90,90) },
+      { time: 0.70, rightArm: { shoulder: [20,60,-20], upperArm: [50,10,-10], forearm: [120,-90,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 75. Other ──
+  {
+    id: "other", name: "Other", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,0], forearm: [80,-90,-45], hand: [0,0,0] }, rightHand: hand(0,90,90,90,90) },
+      { time: 0.70, rightArm: { shoulder: [20,20,-40], upperArm: [30,10,0], forearm: [80,-90,-45], hand: [0,0,0] }, rightHand: hand(0,90,90,90,90) },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 76. About ──
+  {
+    id: "about", name: "About", duration: 1500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.20, 
+        rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [80,0,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,20], upperArm: [30,10,-10], forearm: [80,0,45], hand: [0,0,0] }, 
+        rightHand: hand(90,0,90,90,90), leftHand: hand(40,60,60,60,60) },
+      { time: 0.50, rightArm: { shoulder: [20,40,-20], upperArm: [40,20,-10], forearm: [80,0,-60], hand: [0,0,0] } },
+      { time: 0.80, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [80,0,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 77. Out ──
+  {
+    id: "out", name: "Out", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,10], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: hand(40,60,60,60,60), leftHand: hand(40,60,60,60,60) },
+      { time: 0.70, rightArm: { shoulder: [20,40,-30], upperArm: [40,0,0], forearm: [100,-90,-45], hand: [0,0,0] }, rightHand: OPEN_HAND },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 78. Many ──
+  {
+    id: "many", name: "Many", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-20], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,20], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: FIST, leftHand: FIST },
+      { time: 0.50, rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.70, rightHand: FIST, leftHand: FIST },
+      { time: 0.90, rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 79. Then ──
+  {
+    id: "then", name: "Then", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-20], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,20], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: hand(90,0,90,90,90), leftHand: hand(0,0,90,90,90) },
+      { time: 0.70, rightArm: { shoulder: [20,0,-40], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 80. So ──
+  {
+    id: "so", name: "So", duration: 1200,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,10,-20], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,20], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.70, 
+        rightArm: { shoulder: [20,0,-30], upperArm: [30,10,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,30], upperArm: [30,10,0], forearm: [80,90,45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 81. Some ──
+  {
+    id: "some", name: "Some", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,10], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.60, rightArm: { shoulder: [20,30,-30], upperArm: [40,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 82. Would ──
+  {
+    id: "would", name: "Would", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [20,60,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: OPEN_HAND },
+      { time: 0.50, rightArm: { shoulder: [20,40,10], upperArm: [40,0,0], forearm: [100,-180,35], hand: [0,0,0] } },
+      { time: 0.70, rightArm: { shoulder: [20,60,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 83. Make ──
+  {
+    id: "make", name: "Make", duration: 1500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,10], upperArm: [30,0,0], forearm: [80,90,-45], hand: [0,0,0] }, 
+        rightHand: FIST, leftHand: FIST },
+      { time: 0.50, rightArm: { shoulder: [20,10,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 0.70, rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-90], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 84. Like ──
+  {
+    id: "like", name: "Like", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [20,20,-30], upperArm: [30,10,0], forearm: [80,-90,-45], hand: [0,0,0] }, rightHand: hand(0,0,0,0,0) },
+      { time: 0.70, rightArm: { shoulder: [20,40,-30], upperArm: [50,10,0], forearm: [100,-90,-45], hand: [0,0,0] }, rightHand: hand(30,0,60,0,0) },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 85. Into ──
+  {
+    id: "into", name: "Into", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-30], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,20], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: hand(40,60,60,60,60), leftHand: hand(30,45,45,45,45) },
+      { time: 0.70, rightArm: { shoulder: [20,10,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 86. Time ──
+  {
+    id: "time", name: "Time", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,10], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: hand(90,0,90,90,90), leftHand: FIST },
+      { time: 0.50, rightArm: { shoulder: [10,20,-10], upperArm: [20,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 0.70, rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 87. Look ──
+  {
+    id: "look", name: "Look", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [20,60,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: hand(70,0,0,90,90) },
+      { time: 0.70, rightArm: { shoulder: [20,40,10], upperArm: [40,0,0], forearm: [100,-180,35], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
 
-  // ── 73–98. ASL Fingerspelling A–Z ─────────────────────────────────────────
+  // ── 88–113. ASL Fingerspelling A–Z ─────────────────────────────────────────
   //   thumb, index, middle, ring, pinky  (0 = extended, 90 = fully curled)
   la("a",  10, 90, 90, 90, 90),              // A: fist, thumb at side
   la("b",  90,  0,  0,  0,  0),              // B: 4 fingers up, thumb folded
@@ -1291,6 +1476,28 @@ export const WORD_TO_SIGN: Record<string, string> = {
   she: "she",
   their: "their",
   if: "if",
+
+  // Phase 3 Expansion (20 new words)
+  will: "will",
+  up: "up",
+  other: "other",
+  about: "about",
+  out: "out", outside: "out",
+  many: "many",
+  then: "then",
+  them: "they",
+  these: "this",
+  so: "so",
+  some: "some",
+  her: "she", hers: "she",
+  would: "would",
+  make: "make", makes: "make", made: "make", making: "make",
+  like: "like", likes: "like", liked: "like", liking: "like",
+  him: "he",
+  into: "into",
+  time: "time",
+  has: "have",
+  look: "look", looks: "look", looking: "look", looked: "look",
 };
 
 export function textToSignIds(text: string): string[] {
