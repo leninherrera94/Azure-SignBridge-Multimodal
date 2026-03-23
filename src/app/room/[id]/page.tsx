@@ -7,6 +7,8 @@ import SessionSummary, { type ChatMessage, type AISummaryResult } from "@/compon
 import ResponsibleAIPanel, { type AIDecision } from "@/components/ResponsibleAIPanel";
 import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSignRecognition } from "@/hooks/useSignRecognition";
+import { SUPPORTED_LANGUAGES } from "@/lib/azure/speech";
+import type { SupportedLanguageCode } from "@/lib/azure/speech";
 import type { SignAvatarHandle } from "@/components/SignAvatar";
 import type { SignSequenceItem } from "@/lib/avatar/sign-animations";
 
@@ -16,14 +18,22 @@ const KNOWN_SIGN_IDS = new Set([
   "hello", "thank_you", "yes", "no", "please", "help",
   "sorry", "good", "i_love_you", "stop",
   "1", "2", "3", "4", "5",
+  "want", "eat", "water", "who", "what", "where", "when",
+  "why", "how", "go", "more", "finish", "play", "work", "learn"
 ]);
 
 const SKIP_WORDS_SET = new Set([
+  // English
   "a","an","the","is","am","are","was","were","be","been",
   "i","it","this","that","do","did","does","to","of","and","in","at","on",
+  // Spanish
+  "el","la","los","las","un","una","unos","unas","es","soy","eres","somos","son",
+  "fui","fue","fueron","ser","estar","yo","esto","eso","hacer","hizo","hacen",
+  "a","de","y","en","por","para","con","sobre",
 ]);
 
 const KNOWN_SIGNS_MAP: Record<string, string> = {
+  // English
   hello: "hello", hi: "hello", hey: "hello",
   thank: "thank_you", thanks: "thank_you",
   yes: "yes", yeah: "yes", yep: "yes",
@@ -39,6 +49,48 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   "3": "3", three: "3",
   "4": "4", four: "4",
   "5": "5", five: "5",
+  want: "want", wants: "want", desire: "want",
+  eat: "eat", eats: "eat", ate: "eat",
+  water: "water", drink: "water",
+  who: "who", whose: "who",
+  what: "what",
+  where: "where",
+  when: "when",
+  why: "why",
+  how: "how",
+  go: "go", goes: "go", went: "go",
+  more: "more", extra: "more",
+  finish: "finish", done: "finish", finished: "finish",
+  play: "play", plays: "play", playing: "play",
+  work: "work", works: "work", working: "work",
+  learn: "learn", learns: "learn", learning: "learn",
+
+  // Spanish
+  hola: "hello", buenas: "hello", saludos: "hello",
+  gracias: "thank_you",
+  si: "yes", sí: "yes", claro: "yes",
+  // "no" is already handled by English "no"
+  por: "please", favor: "please", 
+  ayuda: "help", auxiliar: "help",
+  perdon: "sorry", perdón: "sorry", lo: "sorry", siento: "sorry", disculpa: "sorry",
+  bien: "good", bueno: "good", genial: "good", excelente: "good",
+  amo: "i_love_you", quiero: "want", quieres: "want", quiere: "want", queremos: "want", quieren: "want", deseo: "want",
+  alto: "stop", para: "stop", detente: "stop", espera: "stop",
+  uno: "1", dos: "2", tres: "3", cuatro: "4", cinco: "5",
+  comer: "eat", como: "how", comes: "eat", come: "eat", comen: "eat", comemos: "eat", // como can be how or eat. We'll map to how
+  cómo: "how",
+  agua: "water", beber: "water", tomar: "water",
+  quien: "who", quién: "who", quienes: "who", quiénes: "who",
+  que: "what", qué: "what",
+  donde: "where", dónde: "where",
+  cuando: "when", cuándo: "when",
+  porque: "why", porqué: "why",
+  ir: "go", voy: "go", vas: "go", va: "go", vamos: "go", van: "go",
+  mas: "more", más: "more",
+  terminar: "finish", terminado: "finish", fin: "finish", listo: "finish",
+  jugar: "play", juego: "play", juegas: "play", juega: "play", jugamos: "play", juegan: "play",
+  trabajo: "work", trabajar: "work", trabajas: "work", trabaja: "work", trabajamos: "work", trabajan: "work",
+  aprender: "learn", aprendo: "learn", aprendes: "learn", aprende: "learn", aprendemos: "learn", aprenden: "learn",
 };
 
 function clientLocalFallback(text: string): SignSequenceItem[] {
@@ -87,6 +139,7 @@ export default function RoomPage({ params }: PageProps) {
   // ── Navigation ──────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<CommMode | null>(null);
   const [tab,  setTab]  = useState<RoomTab>("avatar");
+  const [language, setLanguage] = useState<SupportedLanguageCode>("en-US");
 
   // ── Session ──────────────────────────────────────────────────────────────────
   const [sessionStart] = useState(() => new Date());
@@ -142,7 +195,7 @@ export default function RoomPage({ params }: PageProps) {
   const lastSignRef    = useRef<string | null>(null);
 
   // ── Hooks ─────────────────────────────────────────────────────────────────────
-  const speech  = useSpeechRecognition("en-US");
+  const speech  = useSpeechRecognition(language);
   const signRec = useSignRecognition();
 
   // ── Elapsed timer ─────────────────────────────────────────────────────────────
@@ -175,7 +228,8 @@ export default function RoomPage({ params }: PageProps) {
 
   // ── Webcam stream ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (camOff || !videoRef.current) return;
+    // Only start the webcam if the user has selected a mode and hasn't toggled off the camera manually
+    if (!mode || camOff || !videoRef.current) return;
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: "user" }, audio: false })
       .then((stream) => {
@@ -189,7 +243,7 @@ export default function RoomPage({ params }: PageProps) {
       streamRef.current = null;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [camOff]);
+  }, [camOff, mode]);
 
   // ── Mode selection ────────────────────────────────────────────────────────────
   function handleModeSelect(selected: CommMode) {
@@ -706,11 +760,24 @@ export default function RoomPage({ params }: PageProps) {
                 color:       "rgba(255,255,255,0.7)",
                 colorScheme: "dark",
               }}
-              defaultValue="en-US"
+              value={language}
+              onChange={(e) => {
+                const newLang = e.target.value as SupportedLanguageCode;
+                if (speech.isListening) {
+                  speech.stopListening().then(() => setLanguage(newLang));
+                } else {
+                  setLanguage(newLang);
+                }
+              }}
+              disabled={speech.isListening || speech.isLoading}
               aria-label="Language"
             >
-              <option value="en-US">🇺🇸 English</option>
-              <option value="es-ES">🇪🇸 Spanish</option>
+              {SUPPORTED_LANGUAGES.map(({ code, label }) => (
+                <option key={code} value={code}>
+                  {code === "en-US" ? "🇺🇸 " : code === "es-ES" ? "🇪🇸 " : ""}
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -13,11 +13,17 @@ const KNOWN_SIGNS = new Set([
 ]);
 
 const SKIP_WORDS = new Set([
+  // English
   "a","an","the","is","am","are","was","were","be","been",
   "i","it","this","that","do","did","does","to","of","and","in","at","on",
+  // Spanish
+  "el","la","los","las","un","una","unos","unas","es","soy","eres","somos","son",
+  "fui","fue","fueron","ser","estar","yo","esto","eso","hacer","hizo","hacen",
+  "a","de","y","en","por","para","con","sobre",
 ]);
 
 const KNOWN_SIGNS_MAP: Record<string, string> = {
+  // English
   hello:"hello", hi:"hello", hey:"hello",
   thank:"thank_you", thanks:"thank_you",
   yes:"yes", yeah:"yes", yep:"yes",
@@ -33,35 +39,77 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   "3":"3", three:"3",
   "4":"4", four:"4",
   "5":"5", five:"5",
+  want: "want", wants: "want", desire: "want",
+  eat: "eat", eats: "eat", ate: "eat",
+  water: "water", drink: "water",
+  who: "who", whose: "who",
+  what: "what",
+  where: "where",
+  when: "when",
+  why: "why",
+  how: "how",
+  go: "go", goes: "go", went: "go",
+  more: "more", extra: "more",
+  finish: "finish", done: "finish", finished: "finish",
+  play: "play", plays: "play", playing: "play",
+  work: "work", works: "work", working: "work",
+  learn: "learn", learns: "learn", learning: "learn",
+  
+  // Spanish
+  hola:"hello", buenas:"hello", saludos:"hello",
+  gracias:"thank_you",
+  si:"yes", sí:"yes", claro:"yes",
+  // "no" is already handled by English
+  por:"please", favor:"please", // "por favor" handled by words
+  ayuda:"help", auxiliar:"help",
+  perdon:"sorry", perdón:"sorry", lo:"sorry", siento:"sorry", disculpa:"sorry",
+  bien:"good", bueno:"good", genial:"good", excelente:"good",
+  amo:"i_love_you", quiero:"want", quieres:"want", quiere:"want", queremos:"want", quieren:"want", deseo:"want",
+  alto:"stop", para:"stop", detente:"stop", espera:"stop",
+  uno:"1", dos:"2", tres:"3", cuatro:"4", cinco:"5",
+  comer: "eat", como: "how", comes: "eat", come: "eat", comen: "eat", comemos: "eat",
+  cómo: "how",
+  agua: "water", beber: "water", tomar: "water",
+  quien: "who", quién: "who", quienes: "who", quiénes: "who",
+  que: "what", qué: "what",
+  donde: "where", dónde: "where",
+  cuando: "when", cuándo: "when",
+  porque: "why", porqué: "why",
+  ir: "go", voy: "go", vas: "go", va: "go", vamos: "go", van: "go",
+  mas: "more", más: "more",
+  terminar: "finish", terminado: "finish", fin: "finish", listo: "finish",
+  jugar: "play", juego: "play", juegas: "play", juega: "play", jugamos: "play", juegan: "play",
+  trabajo: "work", trabajar: "work", trabajas: "work", trabaja: "work", trabajamos: "work", trabajan: "work",
+  aprender: "learn", aprendo: "learn", aprendes: "learn", aprende: "learn", aprendemos: "learn", aprenden: "learn",
 };
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are an ASL (American Sign Language) translation assistant.
 
-Given English text, translate it into a sequence of ASL signs and fingerspelling.
+Given text in ANY language (e.g. English, Spanish), translate its meaning into a sequence of ASL signs and fingerspelling.
 
 AVAILABLE SIGNS (use these when possible):
-hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5
+hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5, want, eat, water, who, what, where, when, why, how, go, more, finish, play, work, learn
 
 RULES:
-1. Simplify text to ASL-friendly grammar (topic-comment structure)
-2. Use a known SIGN when a word matches or is a synonym
-3. FINGERSPELL words that don't have a known sign (names, places, technical terms)
-4. Map synonyms: hi/hey→hello, thanks→thank_you, ok/great/nice/fine→good, wait/halt→stop, love→i_love_you
-5. Skip articles (a, an, the), skip "is/am/are" when possible
+1. Simplify text to ASL-friendly grammar (topic-comment structure) regardless of the input language.
+2. Translate the concept to English first internally, then map to an available ASL SIGN when the meaning matches or is a synonym.
+3. FINGERSPELL words (in their original language or English equivalent) that don't have a known sign (names, places, technical terms).
+4. Map synonyms across languages: hi/hola→hello, thanks/gracias→thank_you, ok/bien→good, wait/para→stop, love/amo→i_love_you
+5. Skip articles (a, the, el, la), skip "is/am/are/es/son" when possible
 6. Proper nouns (names, places) — ALWAYS fingerspell them
 7. Numbers 1–5 use the sign; larger numbers are fingerspelled
-8. EVERY meaningful word must appear as either a sign or fingerspelled
+8. EVERY meaningful concept must appear as either a sign or fingerspelled
 
 OUTPUT FORMAT (JSON only, no markdown):
 {
   "sequence": [
     {"type":"sign","id":"hello","display":"Hello"},
-    {"type":"spell","word":"John","display":"J-O-H-N"},
+    {"type":"spell","word":"Juan","display":"J-U-A-N"},
     {"type":"sign","id":"good","display":"Good"}
   ],
-  "simplified": "Hello John good",
+  "simplified": "Hello Juan good",
   "original": "the original text"
 }`;
 

@@ -437,7 +437,230 @@ export const SIGN_ANIMATIONS: SignAnimation[] = [
     ],
   },
 
-  // ── 16–41. ASL Fingerspelling A–Z ─────────────────────────────────────────
+  // ── 16. Want — pull back and curl fingers ─────────────────────────────────
+  {
+    id: "want", name: "Want", duration: 1500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,-10,-20], upperArm: [30,-10,0], forearm: [80, 0, -90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,-10,20], upperArm: [30,-10,0], forearm: [80, 0, 90], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.60, 
+        rightArm: { shoulder: [15,-20,-20], upperArm: [20,0,0], forearm: [100, 0, -90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [15,-20,20], upperArm: [20,0,0], forearm: [100, 0, 90], hand: [0,0,0] }, 
+        rightHand: hand(30,50,50,50,50), leftHand: hand(30,50,50,50,50) },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ],
+  },
+  // ── 17. Eat — O hand to mouth ───────────────────────────────────────────────
+  {
+    id: "eat", name: "Eat", duration: 1200,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.25, rightArm: { shoulder: [22,63,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: hand(40,60,60,60,60) },
+      { time: 0.50, rightArm: { shoulder: [20,50,10], upperArm: [55,0,0], forearm: [130,-180,35], hand: [0,0,0] }, rightHand: hand(40,60,60,60,60) },
+      { time: 0.70, rightArm: { shoulder: [22,63,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: hand(40,60,60,60,60) },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 18. Water — W hand to chin ──────────────────────────────────────────────
+  {
+    id: "water", name: "Water", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [22,63,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: hand(70,0,0,0,90) },
+      { time: 0.60, rightArm: { shoulder: [22,63,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: hand(70,0,0,0,90) },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 19. Who — Index hook at chin ────────────────────────────────────────────
+  {
+    id: "who", name: "Who", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.20, rightArm: { shoulder: [22,63,10], upperArm: [60,0,0], forearm: [140,-180,35], hand: [0,0,0] }, rightHand: hand(90,45,90,90,90) },
+      { time: 0.40, rightHand: hand(90,90,90,90,90) },
+      { time: 0.60, rightHand: hand(90,45,90,90,90) },
+      { time: 0.80, rightHand: hand(90,90,90,90,90) },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 20. What — Palms up, side to side shake ──────────────────────────────────
+  {
+    id: "what", name: "What", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.20, 
+        rightArm: { shoulder: [20,-10,-20], upperArm: [30,-10,0], forearm: [80, 0, -90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,-10,20], upperArm: [30,-10,0], forearm: [80, 0, 90], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.40, 
+        rightArm: { shoulder: [20,-20,-20], upperArm: [30,-10,0], forearm: [80, 0, -90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,-20,20], upperArm: [30,-10,0], forearm: [80, 0, 90], hand: [0,0,0] } },
+      { time: 0.60, 
+        rightArm: { shoulder: [20,0,-20], upperArm: [30,-10,0], forearm: [80, 0, -90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,20], upperArm: [30,-10,0], forearm: [80, 0, 90], hand: [0,0,0] } },
+      { time: 0.80, 
+        rightArm: { shoulder: [20,-10,-20], upperArm: [30,-10,0], forearm: [80, 0, -90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,-10,20], upperArm: [30,-10,0], forearm: [80, 0, 90], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 21. Where — Index up, shake left/right ───────────────────────────────────
+  {
+    id: "where", name: "Where", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.20, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [90,-90,-45], hand: [0,0,0] }, rightHand: hand(90,0,90,90,90) },
+      { time: 0.40, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [90,-120,-45], hand: [0,0,0] } },
+      { time: 0.60, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [90,-60,-45], hand: [0,0,0] } },
+      { time: 0.80, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [90,-120,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 22. When — Index circles index ───────────────────────────────────────────
+  {
+    id: "when", name: "When", duration: 1600,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.20, 
+        rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [80,0,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,20], upperArm: [30,10,-10], forearm: [80,0,45], hand: [0,0,0] }, 
+        rightHand: hand(90,0,90,90,90), leftHand: hand(90,0,90,90,90) },
+      { time: 0.50, rightArm: { shoulder: [20,30,-20], upperArm: [40,20,-10], forearm: [80,0,-60], hand: [0,0,0] } },
+      { time: 0.80, rightArm: { shoulder: [20,20,-20], upperArm: [30,10,-10], forearm: [80,0,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 23. Why — Forehead to Y ──────────────────────────────────────────────────
+  {
+    id: "why", name: "Why", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, rightHand: OPEN_HAND },
+      { time: 0.30, rightArm: { shoulder: [25,80,20], upperArm: [60,20,10], forearm: [150,-180,45], hand: [0,0,0] }, rightHand: OPEN_HAND },
+      { time: 0.70, rightArm: { shoulder: [25,50,-10], upperArm: [40,0,0], forearm: [100,-90,20], hand: [0,0,0] }, rightHand: hand(0,90,90,90,0) },
+      { time: 1.00, rightArm: REST_ARM_R, rightHand: NATURAL_HAND },
+    ]
+  },
+  // ── 24. How — Roll curved hands ──────────────────────────────────────────────
+  {
+    id: "how", name: "How", duration: 1500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,0,-20], upperArm: [30,0,0], forearm: [80,90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,20], upperArm: [30,0,0], forearm: [80,-90,90], hand: [0,0,0] }, 
+        rightHand: hand(30,45,45,45,45), leftHand: hand(30,45,45,45,45) },
+      { time: 0.70, 
+        rightArm: { shoulder: [20,0,-20], upperArm: [30,0,0], forearm: [80,0,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,20], upperArm: [30,0,0], forearm: [80,0,90], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 25. Go — Index fingers forward ───────────────────────────────────────────
+  {
+    id: "go", name: "Go", duration: 1300,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,30,-20], upperArm: [40,10,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,30,20], upperArm: [40,10,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: hand(90,0,90,90,90), leftHand: hand(90,0,90,90,90) },
+      { time: 0.60, 
+        rightArm: { shoulder: [20,10,-20], upperArm: [20,-10,0], forearm: [40,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,20], upperArm: [20,-10,0], forearm: [40,90,45], hand: [0,0,0] }, 
+        rightHand: hand(90,0,90,90,90), leftHand: hand(90,0,90,90,90) },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 26. More — O-hands tap ───────────────────────────────────────────────────
+  {
+    id: "more", name: "More", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,10,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,10], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] }, 
+        rightHand: hand(40,60,60,60,60), leftHand: hand(40,60,60,60,60) },
+      { time: 0.50, 
+        rightArm: { shoulder: [20,0,-5], upperArm: [30,0,0], forearm: [80,-90,-20], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,5], upperArm: [30,0,0], forearm: [80,90,20], hand: [0,0,0] } },
+      { time: 0.70, 
+        rightArm: { shoulder: [20,10,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,10], upperArm: [30,0,0], forearm: [80,90,45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 27. Finish — Palms out/down ──────────────────────────────────────────────
+  {
+    id: "finish", name: "Finish", duration: 1400,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.25, 
+        rightArm: { shoulder: [20,0,-15], upperArm: [30,0,0], forearm: [80,90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,15], upperArm: [30,0,0], forearm: [80,-90,90], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.60, 
+        rightArm: { shoulder: [20,10,-30], upperArm: [40,10,0], forearm: [40,0,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,10,30], upperArm: [40,10,0], forearm: [40,0,90], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 28. Play — Y-hands shake ─────────────────────────────────────────────────
+  {
+    id: "play", name: "Play", duration: 1500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.20, 
+        rightArm: { shoulder: [20,20,-30], upperArm: [30,0,0], forearm: [80,0,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,30], upperArm: [30,0,0], forearm: [80,0,90], hand: [0,0,0] }, 
+        rightHand: hand(0,90,90,90,0), leftHand: hand(0,90,90,90,0) },
+      { time: 0.40, 
+        rightArm: { shoulder: [20,20,-30], upperArm: [30,0,0], forearm: [80,90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,30], upperArm: [30,0,0], forearm: [80,-90,90], hand: [0,0,0] } },
+      { time: 0.60, 
+        rightArm: { shoulder: [20,20,-30], upperArm: [30,0,0], forearm: [80,-90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,30], upperArm: [30,0,0], forearm: [80,90,90], hand: [0,0,0] } },
+      { time: 0.80, 
+        rightArm: { shoulder: [20,20,-30], upperArm: [30,0,0], forearm: [80,90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,20,30], upperArm: [30,0,0], forearm: [80,-90,90], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 29. Work — S-hands tap ───────────────────────────────────────────────────
+  {
+    id: "work", name: "Work", duration: 1500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.30, 
+        rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-90], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,10], upperArm: [30,0,0], forearm: [80,90,-45], hand: [0,0,0] }, 
+        rightHand: FIST, leftHand: FIST },
+      { time: 0.50, rightArm: { shoulder: [20,10,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 0.70, rightArm: { shoulder: [20,20,-10], upperArm: [30,0,0], forearm: [80,-90,-90], hand: [0,0,0] } },
+      { time: 0.90, rightArm: { shoulder: [20,10,-10], upperArm: [30,0,0], forearm: [80,-90,-45], hand: [0,0,0] } },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+  // ── 30. Learn — Grab from flat hand ──────────────────────────────────────────
+  {
+    id: "learn", name: "Learn", duration: 1600,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: OPEN_HAND, leftHand: NATURAL_HAND },
+      { time: 0.25, 
+        rightArm: { shoulder: [20,0,-15], upperArm: [30,0,0], forearm: [80,0,-45], hand: [0,0,0] }, 
+        leftArm: { shoulder: [20,0,15], upperArm: [30,0,0], forearm: [80,-90,45], hand: [0,0,0] }, 
+        rightHand: OPEN_HAND, leftHand: OPEN_HAND },
+      { time: 0.60, 
+        rightArm: { shoulder: [25,80,20], upperArm: [60,20,10], forearm: [150,-180,45], hand: [0,0,0] }, 
+        rightHand: hand(30,45,45,45,45) },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
+    ]
+  },
+
+  // ── 31–56. ASL Fingerspelling A–Z ─────────────────────────────────────────
   //   thumb, index, middle, ring, pinky  (0 = extended, 90 = fully curled)
   la("a",  10, 90, 90, 90, 90),              // A: fist, thumb at side
   la("b",  90,  0,  0,  0,  0),              // B: 4 fingers up, thumb folded
@@ -489,6 +712,25 @@ export const WORD_TO_SIGN: Record<string, string> = {
   "3": "three", three: "three",
   "4": "four",  four: "four",
   "5": "five",  five: "five",
+
+  // 15 New generated words
+  want: "want",
+  eat: "eat",
+  water: "water",
+  drink: "water",
+  who: "who",
+  what: "what",
+  where: "where",
+  when: "when",
+  why: "why",
+  how: "how",
+  go: "go",
+  more: "more",
+  finish: "finish",
+  done: "finish",
+  play: "play",
+  work: "work",
+  learn: "learn",
 };
 
 export function textToSignIds(text: string): string[] {
