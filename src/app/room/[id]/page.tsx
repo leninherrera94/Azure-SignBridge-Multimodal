@@ -48,7 +48,9 @@ const KNOWN_SIGN_IDS = new Set([
   "why", "how", "go", "more", "finish", "play", "work", "learn",
   "the", "of", "and", "a", "to", "in", "is", "you", "that", "it",
   "he", "was", "for", "on", "are", "as", "with", "his", "they", "i",
-  "at", "be", "this", "have", "from", "or", "had", "by", "word"
+  "at", "be", "this", "have", "from", "or", "had", "by", "word",
+  "but", "all", "we", "your", "can", "said", "there", "use",
+  "each", "which", "she", "their", "if"
 ]);
 
 const SKIP_WORDS_SET = new Set([
@@ -96,10 +98,13 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   are: "are", as: "as", with: "with", his: "his", they: "they", i: "i",
   at: "at", be: "be", "this": "this", have: "have", from: "from", or: "or", had: "had", by: "by", word: "word",
 
+  but: "but", all: "all", we: "we", your: "your", can: "can", said: "said",
+  there: "there", use: "use", each: "each", which: "which", she: "she", their: "their", if: "if",
+
   // Spanish
   hola: "hello", buenas: "hello", saludos: "hello",
   gracias: "thank_you",
-  si: "yes", sí: "yes", claro: "yes",
+  sí: "yes", claro: "yes",
   // "no" is already handled by English "no"
   favor: "please", 
   ayuda: "help", auxiliar: "help",
@@ -148,6 +153,20 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   tuve: "had", tenía: "had", tuvimos: "had", tuvieron: "had",
   por: "by",
   palabra: "word", palabras: "word",
+
+  pero: "but", sino: "but",
+  todo: "all", todos: "all", todas: "all",
+  nosotros: "we", nosotras: "we",
+  tuyo: "your", tuya: "your", tuyos: "your", tuyas: "your",
+  puedo: "can", puedes: "can", puede: "can", podemos: "can", pueden: "can", poder: "can",
+  dijo: "said", dije: "said", dijeron: "said", dijimos: "said", decir: "said",
+  ahi: "there", ahí: "there", alli: "there", allí: "there", alla: "there", allá: "there",
+  usar: "use", uso: "use", usas: "use", usa: "use", usamos: "use", usan: "use",
+  cada: "each",
+  cual: "which", cuál: "which", cuales: "which", cuáles: "which",
+  ella: "she",
+  suyo: "their", suya: "their", suyos: "their", suyas: "their",
+  si: "if",
 };
 
 function clientLocalFallback(text: string): SignSequenceItem[] {
