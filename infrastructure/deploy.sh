@@ -11,6 +11,18 @@ RG="${2:-signbridge-rg-${ENV}}"
 SUBSCRIPTION="${3:-$(az account show --query id -o tsv)}"
 LOCATION="eastus2"
 
+check_quota_scope() {
+  local scope="$1"
+  local label="$2"
+
+  if az quota list --scope "${scope}" --output none > /dev/null 2>&1; then
+    echo "✅ ${label} quota scope is reachable"
+  else
+    echo "⚠️  ${label} quota scope could not be validated or has insufficient access/quota"
+    echo "   Continuing to next step (non-blocking quota validation)."
+  fi
+}
+
 echo "🚀 Deploying SignBridge AI to environment: ${ENV}"
 echo "   Resource Group : ${RG}"
 echo "   Subscription   : ${SUBSCRIPTION}"
@@ -19,6 +31,14 @@ echo ""
 
 # Ensure logged in
 az account set --subscription "${SUBSCRIPTION}"
+
+# Best-effort quota validation (non-blocking)
+echo "🔎 Validating quota requirements (non-blocking)..."
+check_quota_scope "/subscriptions/${SUBSCRIPTION}/providers/Microsoft.CognitiveServices/locations/${LOCATION}" "Cognitive Services (${LOCATION})"
+check_quota_scope "/subscriptions/${SUBSCRIPTION}/providers/Microsoft.Web/locations/${LOCATION}" "App Service (${LOCATION})"
+check_quota_scope "/subscriptions/${SUBSCRIPTION}/providers/Microsoft.SignalRService/locations/${LOCATION}" "SignalR (${LOCATION})"
+echo "✅ Quota validation step finished"
+echo ""
 
 # Create resource group if it doesn't exist
 az group create \
