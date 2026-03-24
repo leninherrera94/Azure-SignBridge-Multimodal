@@ -24,6 +24,8 @@ param deploymentPrincipalObjectId string
 
 var prefix = 'signbridge'
 var env    = environment
+var uniqueSuffix = substring(uniqueString(subscription().subscriptionId, resourceGroup().id, env), 0, 8)
+var nameSuffix = '${env}-${uniqueSuffix}'
 
 var tags = {
   project:   'signbridge-ai'
@@ -33,8 +35,26 @@ var tags = {
 }
 
 // Storage account names must be ≤24 chars, lowercase, alphanumeric only
-var storageAccountName = '${prefix}st${env}'        // signbridgestdev  (16)
-var funcStorageName    = '${prefix}funcst${env}'    // signbridgefuncstdev (19)
+var storageAccountName = '${prefix}st${env}${uniqueSuffix}'   // signbridgestdevxxxxxxxx (24)
+var funcStorageName    = '${prefix}fs${env}${uniqueSuffix}'   // signbridgefsdevxxxxxxxx (24)
+
+var logAnalyticsName = '${prefix}-logs-${nameSuffix}'
+var appInsightsName = '${prefix}-insights-${nameSuffix}'
+var keyVaultName = '${prefix}-${env}-${uniqueSuffix}'
+var cosmosAccountName = '${prefix}-cosmos-${nameSuffix}'
+var openAIServiceName = '${prefix}-openai-${nameSuffix}'
+var speechServiceName = '${prefix}-speech-${nameSuffix}'
+var visionServiceName = '${prefix}-vision-${nameSuffix}'
+var translatorServiceName = '${prefix}-translator-${nameSuffix}'
+var contentSafetyServiceName = '${prefix}-contentsafety-${nameSuffix}'
+var languageServiceName = '${prefix}-language-${nameSuffix}'
+var signalRServiceName = '${prefix}-signalr-${nameSuffix}'
+var communicationServiceName = '${prefix}-comm-${nameSuffix}'
+var functionPlanName = '${prefix}-funcplan-${nameSuffix}'
+var appServicePlanName = '${prefix}-asp-${nameSuffix}'
+var functionAppName = '${prefix}-func-${nameSuffix}'
+var appServiceName = '${prefix}-app-${nameSuffix}'
+var apimName = '${prefix}-apim-${nameSuffix}'
 
 // Cognitive Services SKU — S0 for prod to handle load; F0 (free) dev where available
 var cogSku = environment == 'prod' ? 'S0' : 'S0'   // F0 lacks most endpoints; keep S0
@@ -51,7 +71,7 @@ var cosmosBuiltinDataContrib     = '00000000-0000-0000-0000-000000000002'
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name:     '${prefix}-logs-${env}'
+  name:     logAnalyticsName
   location: location
   tags:     tags
   properties: {
@@ -62,7 +82,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
 }
 
 resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name:     '${prefix}-insights-${env}'
+  name:     appInsightsName
   location: location
   tags:     tags
   kind:     'web'
@@ -80,7 +100,7 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
-  name:     '${prefix}-kv-${env}'
+  name:     keyVaultName
   location: location
   tags:     tags
   properties: {
@@ -162,7 +182,7 @@ resource funcStorage 'Microsoft.Storage/storageAccounts@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-02-15-preview' = {
-  name:     '${prefix}-cosmos-${env}'
+  name:     cosmosAccountName
   location: location
   tags:     tags
   kind:     'GlobalDocumentDB'
@@ -251,13 +271,13 @@ resource cosmosRooms 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/contain
 
 // 5a. Azure OpenAI  (NOTE: requires approved subscription; region must support GPT-4o)
 resource openAIService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-openai-${env}'
+  name:     openAIServiceName
   location: location       // eastus2 supports gpt-4o
   tags:     tags
   kind:     'OpenAI'
   sku:      { name: 'S0' }
   properties: {
-    customSubDomainName:  '${prefix}-openai-${env}'
+    customSubDomainName:  openAIServiceName
     publicNetworkAccess:  'Enabled'
     networkAcls:          { defaultAction: 'Allow' }
     disableLocalAuth:     false
@@ -283,13 +303,13 @@ resource gpt4oDeployment 'Microsoft.CognitiveServices/accounts/deployments@2024-
 
 // 5b. Speech Services
 resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-speech-${env}'
+  name:     speechServiceName
   location: location
   tags:     tags
   kind:     'SpeechServices'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-speech-${env}'
+    customSubDomainName: speechServiceName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -297,13 +317,13 @@ resource speechService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
 
 // 5c. Computer Vision
 resource visionService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-vision-${env}'
+  name:     visionServiceName
   location: location
   tags:     tags
   kind:     'ComputerVision'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-vision-${env}'
+    customSubDomainName: visionServiceName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -311,13 +331,13 @@ resource visionService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview'
 
 // 5d. Translator  (global resource — location must be 'global')
 resource translatorService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-translator-${env}'
+  name:     translatorServiceName
   location: 'global'
   tags:     tags
   kind:     'TextTranslation'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-translator-${env}'
+    customSubDomainName: translatorServiceName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -325,13 +345,13 @@ resource translatorService 'Microsoft.CognitiveServices/accounts@2024-04-01-prev
 
 // 5e. Content Safety
 resource contentSafetyService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-contentsafety-${env}'
+  name:     contentSafetyServiceName
   location: location
   tags:     tags
   kind:     'ContentSafety'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-contentsafety-${env}'
+    customSubDomainName: contentSafetyServiceName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -339,13 +359,13 @@ resource contentSafetyService 'Microsoft.CognitiveServices/accounts@2024-04-01-p
 
 // 5f. Azure AI Language (Text Analytics)
 resource languageService 'Microsoft.CognitiveServices/accounts@2024-04-01-preview' = {
-  name:     '${prefix}-language-${env}'
+  name:     languageServiceName
   location: location
   tags:     tags
   kind:     'TextAnalytics'
   sku:      { name: cogSku }
   properties: {
-    customSubDomainName: '${prefix}-language-${env}'
+    customSubDomainName: languageServiceName
     publicNetworkAccess: 'Enabled'
     networkAcls:         { defaultAction: 'Allow' }
   }
@@ -356,7 +376,7 @@ resource languageService 'Microsoft.CognitiveServices/accounts@2024-04-01-previe
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource signalRService 'Microsoft.SignalRService/signalR@2023-02-01' = {
-  name:     '${prefix}-signalr-${env}'
+  name:     signalRServiceName
   location: location
   tags:     tags
   sku: {
@@ -382,7 +402,7 @@ resource signalRService 'Microsoft.SignalRService/signalR@2023-02-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource communicationService 'Microsoft.Communication/communicationServices@2023-04-01' = {
-  name:     '${prefix}-comm-${env}'
+  name:     communicationServiceName
   location: 'global'       // ACS control plane is always global
   tags:     tags
   properties: {
@@ -396,7 +416,7 @@ resource communicationService 'Microsoft.Communication/communicationServices@202
 
 // Function App — Consumption plan (Y1)
 resource funcPlan 'Microsoft.Web/serverfarms@2023-01-01' = {
-  name:     '${prefix}-funcplan-${env}'
+  name:     functionPlanName
   location: location
   tags:     tags
   sku:      { name: 'Y1', tier: 'Dynamic' }
@@ -408,7 +428,7 @@ resource funcPlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 
 // App Service — B1 plan for Next.js
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
-  name:     '${prefix}-asp-${env}'
+  name:     appServicePlanName
   location: location
   tags:     tags
   sku: {
@@ -426,7 +446,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
-  name:     '${prefix}-func-${env}'
+  name:     functionAppName
   location: location
   tags:     tags
   kind:     'functionapp,linux'
@@ -443,7 +463,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
       appSettings: [
         { name: 'AzureWebJobsStorage',        value: 'DefaultEndpointsProtocol=https;AccountName=${funcStorage.name};AccountKey=${funcStorage.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}' }
         { name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', value: 'DefaultEndpointsProtocol=https;AccountName=${funcStorage.name};AccountKey=${funcStorage.listKeys().keys[0].value};EndpointSuffix=${az.environment().suffixes.storage}' }
-        { name: 'WEBSITE_CONTENTSHARE',       value: '${prefix}-func-${env}' }
+        { name: 'WEBSITE_CONTENTSHARE',       value: functionAppName }
         { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
         { name: 'FUNCTIONS_WORKER_RUNTIME',    value: 'node' }
         { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~20' }
@@ -464,7 +484,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
         { name: 'AZURE_COSMOS_ENDPOINT',    value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-cosmos-endpoint)' }
         { name: 'AZURE_STORAGE_CONNECTION_STRING', value: '@Microsoft.KeyVault(VaultName=${keyVault.name};SecretName=azure-storage-connection-string)' }
       ]
-      cors: { allowedOrigins: ['https://${prefix}-app-${env}.azurewebsites.net'] }
+      cors: { allowedOrigins: ['https://${appServiceName}.azurewebsites.net'] }
     }
   }
 }
@@ -474,7 +494,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource appService 'Microsoft.Web/sites@2023-01-01' = {
-  name:     '${prefix}-app-${env}'
+  name:     appServiceName
   location: location
   tags:     tags
   kind:     'app,linux'
@@ -524,7 +544,7 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 resource apim 'Microsoft.ApiManagement/service@2023-05-01-preview' = {
-  name:     '${prefix}-apim-${env}'
+  name:     apimName
   location: location
   tags:     tags
   sku: {
@@ -780,3 +800,6 @@ output functionAppPrincipalId string = functionApp.identity.principalId
 
 @description('App Service system-assigned managed identity principal ID')
 output appServicePrincipalId string = appService.identity.principalId
+
+@description('Deterministic 8-character unique suffix appended to resource names')
+output uniqueNameSuffix string = uniqueSuffix

@@ -68,6 +68,7 @@ if [ "${ENV}" = "dev" ]; then
   SIGNALR_URL=$(echo "${DEPLOYMENT_OUTPUT}" | jq -r '.properties.outputs.signalRUrl.value')
   COSMOS_ENDPOINT=$(echo "${DEPLOYMENT_OUTPUT}" | jq -r '.properties.outputs.cosmosEndpoint.value')
   KV_URI=$(echo "${DEPLOYMENT_OUTPUT}" | jq -r '.properties.outputs.keyVaultUri.value')
+  KV_NAME=$(echo "${KV_URI}" | sed -E 's#https://([^.]*)\..*#\1#')
 
   cat >> "${OUTPUT_FILE}" << EOF
 AZURE_OPENAI_ENDPOINT=${OPENAI_ENDPOINT}
@@ -89,7 +90,7 @@ EOF
 
   echo "📝 .env.local written to ${OUTPUT_FILE}"
   echo "   Note: replace <fetch-from-key-vault> values using:"
-  echo "   az keyvault secret show --vault-name signbridge-kv-dev --name <secret-name> --query value -o tsv"
+  echo "   az keyvault secret show --vault-name ${KV_NAME} --name <secret-name> --query value -o tsv"
 fi
 
 echo ""

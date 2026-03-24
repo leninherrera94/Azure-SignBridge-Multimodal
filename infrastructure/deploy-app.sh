@@ -3,7 +3,7 @@
 # deploy-app.sh — Build & deploy SignBridge AI to Azure App Service
 #
 # Usage:
-#   ./infrastructure/deploy-app.sh [dev|prod]
+#   ./infrastructure/deploy-app.sh [dev|prod] [resource-group] [app-service-name]
 #
 # Requirements:
 #   - az CLI logged in  (az login)
@@ -13,17 +13,30 @@
 # Example:
 #   AZURE_RESOURCE_GROUP=signbridge-rg ./infrastructure/deploy-app.sh dev
 #   ./infrastructure/deploy-app.sh prod signbridge-prod-rg
+#   ./infrastructure/deploy-app.sh prod signbridge-prod-rg signbridge-app-prod-a1b2c3d4
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 # ── Args ──────────────────────────────────────────────────────────────────────
 ENV="${1:-dev}"
 RG="${2:-${AZURE_RESOURCE_GROUP:-signbridge-rg}}"
-APP_NAME="signbridge-app-${ENV}"
+APP_NAME="${3:-signbridge-app-${ENV}}"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${REPO_ROOT}/.next/standalone"
 PACKAGE_DIR="${REPO_ROOT}/.deploy"
 ZIP_PATH="${REPO_ROOT}/signbridge-app.zip"
+
+if ! az webapp show --resource-group "${RG}" --name "${APP_NAME}" --query name --output tsv > /dev/null 2>&1; then
+  DISCOVERED_APP_NAME="$(az webapp list --resource-group "${RG}" --query "[?starts_with(name, 'signbridge-app-${ENV}-')].name | [0]" -o tsv)"
+  if [ -n "${DISCOVERED_APP_NAME}" ]; then
+    APP_NAME="${DISCOVERED_APP_NAME}"
+  else
+    echo "✗ Could not find App Service '${APP_NAME}' in resource group '${RG}'"
+    echo "  Pass the app name explicitly as the third argument, e.g.:"
+    echo "  ./infrastructure/deploy-app.sh ${ENV} ${RG} signbridge-app-${ENV}-<8charhash>"
+    exit 1
+  fi
+fi
 
 echo "╔══════════════════════════════════════════════════════════════════╗"
 echo "║  SignBridge AI — App Service Deploy                             ║"
