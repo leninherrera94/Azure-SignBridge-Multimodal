@@ -1,6 +1,15 @@
 # Azure-SignBridge-Multimodal
 Plataforma de comunicación inclusiva que integra Azure AI Services para traducción bidireccional en tiempo real entre voz, texto y lengua de señas (LSC). Incluye videollamadas con ACS, moderación de contenido y generación de resúmenes accesibles. Diseñado para transformar la accesibilidad en entornos laborales y educativos.
 
+## Runtime prerequisites
+
+- Node.js `>= 20.9.0` (recommended: Node 22 LTS)
+- npm `>= 10`
+
+Node 16 is not supported by this project because `next@16` and multiple dependencies require Node 20+.
+
+## Getting Started
+
 ## 🎯 Problema que Resolvemos
 
 Las personas sordas y con pérdida auditiva enfrentan barreras de comunicación significativas en lugares de trabajo, aulas y servicios públicos. La falta de intérpretes de lengua de señas y herramientas de comunicación accesibles limita su participación plena en la sociedad.

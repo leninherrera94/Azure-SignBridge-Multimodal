@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOpenAIClient }        from "@/lib/azure/openai";
-import { checkContentSafety }     from "@/lib/azure/content-safety";
-import { detectPII }              from "@/lib/azure/pii-detection";
-import type { SignSequenceItem }  from "@/lib/avatar/sign-animations";
+import { getOpenAIClient }         from "@/lib/azure/openai";
+import { checkContentSafety }      from "@/lib/azure/content-safety";
+import { detectPII }               from "@/lib/azure/pii-detection";
+import type { SignSequenceItem }   from "@/lib/avatar/sign-animations";
+import type { SupportedLanguageCode } from "@/lib/azure/speech";
+import { getKnownSignIds, getWordMap } from "@/lib/avatar/sign-loader";
+import { resolveSignLanguageForUiLanguage, type SignLanguageCode } from "@/lib/avatar/sign-languages";
 
 // ─── Known signs ──────────────────────────────────────────────────────────────
 
@@ -139,31 +142,28 @@ async function translateToEnglishAzure(
 
 // ─── System prompt ────────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are an ASL (American Sign Language) translation assistant.
+function getSystemPrompt(signLanguage: SignLanguageCode, knownSignIds: ReadonlySet<string>): string {
+  const signLanguageLabel = signLanguage === "LSC"
+    ? "LSC (Lengua de Señas Colombiana)"
+    : "ASL (American Sign Language)";
+  const availableSigns = Array.from(knownSignIds).join(", ");
 
-The input text may be in English, Spanish, or Portuguese. Understand the meaning regardless of language.
+  return `You are a ${signLanguageLabel} translation assistant.
 
-Translate it into a sequence of ASL signs and fingerspelling.
+Given text in ANY language (e.g. English, Spanish), translate its meaning into a sequence of ${signLanguageLabel} signs and fingerspelling.
 
 AVAILABLE SIGNS (use these when possible):
-hello, thank_you, yes, no, please, help, sorry, good, i_love_you, stop, 1, 2, 3, 4, 5
+${availableSigns}
 
 RULES:
-1. Simplify text to ASL-friendly grammar (topic-comment structure)
-2. Use a known SIGN when a word or phrase matches its meaning in any language:
-   - hello/hi/hey/hola/olá/oi → hello
-   - thank you/thanks/gracias/obrigado/obrigada → thank_you
-   - yes/yeah/sí/sim → yes
-   - no/nope/não → no
-   - please/por favor → please
-   - help/ayuda/ajuda → help
-   - sorry/perdón/desculpa → sorry
-   - good/great/ok/bien/bueno/bom/ótimo → good
-   - stop/wait/pare/espera → stop
-   - love/i love you/te amo/te quiero/te amo → i_love_you
-3. FINGERSPELL proper nouns (names, places) and unknown words
-4. Skip articles and auxiliary verbs when possible
-5. EVERY meaningful word must appear as either a sign or fingerspelled
+1. Simplify text to sign-language-friendly grammar (topic-comment structure) regardless of the input language.
+2. Translate the concept to English first internally, then map to an available SIGN when the meaning matches or is a synonym.
+3. FINGERSPELL words (in their original language or English equivalent) that don't have a known sign (names, places, technical terms).
+4. Map synonyms across languages where possible.
+5. Skip articles (a, the, el, la), skip "is/am/are/es/son" when possible.
+6. Proper nouns (names, places) — ALWAYS fingerspell them.
+7. Numbers 1–5 use the sign; larger numbers are fingerspelled.
+8. EVERY meaningful concept must appear as either a sign or fingerspelled.
 
 OUTPUT FORMAT (JSON only, no markdown):
 {
@@ -175,17 +175,22 @@ OUTPUT FORMAT (JSON only, no markdown):
   "simplified": "Hello John good",
   "original": "the original text"
 }`;
+}
 
 // ─── Local fallback (runs on English text) ─────────────────────────────────────
 
-function localFallback(text: string): { sequence: SignSequenceItem[]; simplified: string } {
+function localFallback(
+  text: string,
+  wordMap: Readonly<Record<string, string>>,
+  knownSignIds: ReadonlySet<string>
+): { sequence: SignSequenceItem[]; simplified: string } {
   const words = text.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter((w) => w.length > 0);
   const sequence: SignSequenceItem[] = [];
 
   for (const word of words) {
     if (SKIP_WORDS.has(word)) continue;
-    const signId = KNOWN_SIGNS_MAP[word];
-    if (signId) {
+    const signId = wordMap[word];
+    if (signId && knownSignIds.has(signId)) {
       sequence.push({
         type:    "sign",
         id:      signId,
@@ -210,12 +215,17 @@ function localFallback(text: string): { sequence: SignSequenceItem[]; simplified
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({})) as { text?: string; language?: string };
-  const originalText = body.text?.trim() ?? "";
-  const langCode     = body.language ?? "en-US";          // e.g. "pt-BR"
-  const baseLang     = langCode.split("-")[0] ?? "en";    // e.g. "pt"
+  const body = await req.json().catch(() => ({})) as { text?: string; language?: SupportedLanguageCode };
+  const text = body.text?.trim() ?? "";
+  const uiLanguage = body.language ?? "en-US";
+  const signLanguage = resolveSignLanguageForUiLanguage(uiLanguage);
+  const loadedKnownSignIds = getKnownSignIds(signLanguage);
+  const loadedWordMap = getWordMap(signLanguage);
+  const knownSignIds = signLanguage === "ASL" && loadedKnownSignIds.size === 0 ? KNOWN_SIGNS : loadedKnownSignIds;
+  const wordMap = signLanguage === "ASL" && Object.keys(loadedWordMap).length === 0 ? KNOWN_SIGNS_MAP : loadedWordMap;
+  const baseLang = uiLanguage.split("-")[0] ?? "en";
 
-  if (!originalText) {
+  if (!text) {
     return NextResponse.json({
       sequence: [], signs: [], simplified: "", original: "", translatedText: null,
       safetyCheck: { contentSafety: { passed: true, categories: { hate: 0, sexual: 0, violence: 0, selfHarm: 0 } }, pii: { found: false, count: 0 } },
@@ -223,12 +233,12 @@ export async function POST(req: NextRequest) {
   }
 
   // ── PASO 1: Translate to English FIRST ────────────────────────────────────
-  console.log("[step1] Original text:", originalText, "| lang:", langCode, "| baseLang:", baseLang);
+  console.log("[step1] Original text:", text, "| lang:", uiLanguage, "| baseLang:", baseLang);
 
-  let textForSigns = originalText;
+  let textForSigns = text;
 
   if (baseLang !== "en") {
-    textForSigns = await translateToEnglishAzure(originalText, baseLang);
+    textForSigns = await translateToEnglishAzure(text, baseLang);
   }
 
   console.log("[step2] Translated text (en):", textForSigns);
@@ -271,7 +281,7 @@ export async function POST(req: NextRequest) {
     const completion = await client.chat.completions.create({
       model:       process.env.AZURE_OPENAI_DEPLOYMENT ?? "gpt-4o",
       messages:    [
-        { role: "system", content: SYSTEM_PROMPT },
+        { role: "system", content: getSystemPrompt(signLanguage, knownSignIds) },
         { role: "user",   content: textToTranslate },
       ],
       temperature: 0.1,
@@ -285,9 +295,9 @@ export async function POST(req: NextRequest) {
     try {
       parsed = JSON.parse(clean);
     } catch {
-      const fb = localFallback(textToTranslate);
+      const fb = localFallback(textToTranslate, wordMap, knownSignIds);
       return NextResponse.json({
-        ...fb, original: originalText, translatedText,
+        ...fb, original: text, translatedText,
         signs: fb.sequence.filter((s) => s.type === "sign").map((s) => (s as { id: string }).id),
         safetyCheck,
       });
@@ -297,7 +307,7 @@ export async function POST(req: NextRequest) {
       .filter((item): item is SignSequenceItem => {
         if (!item || typeof item !== "object") return false;
         const it = item as Record<string, unknown>;
-        if (it.type === "sign")  return typeof it.id === "string" && KNOWN_SIGNS.has(it.id as string);
+        if (it.type === "sign")  return typeof it.id === "string" && knownSignIds.has(it.id as string);
         if (it.type === "spell") return typeof it.word === "string" && (it.word as string).length > 0;
         return false;
       });
@@ -312,17 +322,17 @@ export async function POST(req: NextRequest) {
       sequence,
       signs,
       simplified:       parsed.simplified ?? "",
-      original:         originalText,
+      original:         text,
       translatedText,
       detectedLanguage: baseLang,
       safetyCheck,
     });
   } catch (err) {
-    console.error("[translate-to-signs] OpenAI error — using local fallback on:", textToTranslate, err);
-    const fb = localFallback(textToTranslate);
+    console.error("[translate-to-signs] OpenAI error:", err);
+    const fb = localFallback(textToTranslate, wordMap, knownSignIds);
     return NextResponse.json({
       ...fb,
-      original:         originalText,
+      original:         text,
       translatedText,
       detectedLanguage: baseLang,
       signs: fb.sequence.filter((s) => s.type === "sign").map((s) => (s as { id: string }).id),

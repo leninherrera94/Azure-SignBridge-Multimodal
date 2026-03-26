@@ -10,8 +10,35 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSignRecognition } from "@/hooks/useSignRecognition";
 import type { SignAvatarHandle } from "@/components/SignAvatar";
 import type { SignSequenceItem } from "@/lib/avatar/sign-animations";
-import { UI_LANGUAGES } from "@/lib/azure/speech";
+import { UI_LANGUAGES, SUPPORTED_LANGUAGES } from "@/lib/azure/speech";
 import type { SupportedLanguageCode } from "@/lib/azure/speech";
+import { getKnownSignIds, getWordMap } from "@/lib/avatar/sign-loader";
+import { resolveSignLanguageForUiLanguage, type SignLanguageCode } from "@/lib/avatar/sign-languages";
+import { VideoStreamRenderer, RemoteVideoStream } from "@azure/communication-calling";
+
+export function RemoteParticipantVideo({ stream }: { stream: RemoteVideoStream }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    let renderer: VideoStreamRenderer | null = null;
+    let view: any = null;
+    let mounted = true;
+    async function render() {
+      if (!containerRef.current) return;
+      renderer = new VideoStreamRenderer(stream);
+      view = await renderer.createView();
+      if (mounted && containerRef.current) {
+        containerRef.current.appendChild(view.target);
+      }
+    }
+    render();
+    return () => {
+      mounted = false;
+      view?.dispose();
+      renderer?.dispose();
+    };
+  }, [stream]);
+  return <div ref={containerRef} className="w-full h-full object-cover rounded-xl overflow-hidden" style={{ background: "#000" }} />;
+}
 
 // ─── Client-side local fallback ───────────────────────────────────────────────
 
@@ -44,13 +71,17 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   "5": "5", five: "5",
 };
 
-function clientLocalFallback(text: string): SignSequenceItem[] {
+function clientLocalFallback(text: string, signLanguage: SignLanguageCode): SignSequenceItem[] {
+  const loadedWordMap = getWordMap(signLanguage);
+  const loadedKnownSignIds = getKnownSignIds(signLanguage);
+  const wordMap = signLanguage === "ASL" && Object.keys(loadedWordMap).length === 0 ? KNOWN_SIGNS_MAP : loadedWordMap;
+  const knownSignIds = signLanguage === "ASL" && loadedKnownSignIds.size === 0 ? KNOWN_SIGN_IDS : loadedKnownSignIds;
   const words = text.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter((w) => w.length > 0);
   const seq: SignSequenceItem[] = [];
   for (const word of words) {
     if (SKIP_WORDS_SET.has(word)) continue;
-    const signId = KNOWN_SIGNS_MAP[word];
-    if (signId) {
+    const signId = wordMap[word];
+    if (signId && knownSignIds.has(signId)) {
       seq.push({ type: "sign", id: signId, display: signId.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()) });
     } else {
       seq.push({ type: "spell", word, display: word.toUpperCase().split("").join("-") });
@@ -93,6 +124,7 @@ export default function RoomPage({ params }: PageProps) {
   const [mode,     setMode]     = useState<CommMode | null>(null);
   const [language, setLanguage] = useState<SupportedLanguageCode>("en-US");
   const [tab,      setTab]      = useState<RoomTab>("avatar");
+  const activeSignLang = resolveSignLanguageForUiLanguage(language);
 
   // ── Session ──────────────────────────────────────────────────────────────────
   const [sessionStart] = useState(() => new Date());
@@ -172,6 +204,11 @@ export default function RoomPage({ params }: PageProps) {
       if (typeof p.reduceMotion      === "boolean") setReduceMotion(p.reduceMotion);
     } catch { /* ignore */ }
   }, []);
+
+  // ── Sync sign language to avatar engine ──────────────────────────────────────
+  useEffect(() => {
+    avatarRef.current?.setSignLanguage(activeSignLang);
+  }, [activeSignLang]);
 
   function saveA11y(update: Record<string, unknown>) {
     try {
@@ -404,7 +441,7 @@ export default function RoomPage({ params }: PageProps) {
         }
       } catch {
         // Timeout or network error → local fallback
-        sequence = clientLocalFallback(text);
+        sequence = clientLocalFallback(text, activeSignLang);
         const responseMs = Date.now() - t0;
         addDecision({
           action:   "translation",
@@ -432,7 +469,7 @@ export default function RoomPage({ params }: PageProps) {
         drainQueue();
       }
     },
-    [mode, language, addMessage, addDecision, drainQueue]
+    [mode, language, activeSignLang, addMessage, addDecision, drainQueue]
   );
 
   // ── Chat input submit (used in type mode and chat tab) ────────────────────────
@@ -617,6 +654,13 @@ export default function RoomPage({ params }: PageProps) {
               </div>
             )}
 
+            <div
+              className="absolute top-3 left-36 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+              style={{ background: "rgba(167,139,250,0.18)", border: "1px solid rgba(167,139,250,0.4)", color: "#ddd6fe" }}
+            >
+              🤟 {activeSignLang}
+            </div>
+
             {/* Translating badge */}
             {isTranslating && (
               <div
@@ -743,8 +787,11 @@ export default function RoomPage({ params }: PageProps) {
               }}
               aria-label="Language"
             >
-              {UI_LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
+              {SUPPORTED_LANGUAGES.map(({ code, label }) => (
+                <option key={code} value={code}>
+                  {code === "en-US" ? "🇺🇸 " : code === "es-ES" ? "🇪🇸 " : code === "es-CO" ? "🇨🇴 " : ""}
+                  {label}
+                </option>
               ))}
             </select>
           </div>
