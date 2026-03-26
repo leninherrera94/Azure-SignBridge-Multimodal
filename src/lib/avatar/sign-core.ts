@@ -65,6 +65,7 @@ export const OPEN_HAND    = hand( 0,  0,  0,  0,  0);
 export const NATURAL_HAND = hand(10, 10, 10, 10, 10);
 export const FIST         = hand(90, 90, 90, 90, 90);
 export const ILY          = hand( 0,  0, 90, 90,  0);
+export const HAND_Y       = hand( 0, 90, 90, 90,  0);
 
 // ─── Rest arm poses ───────────────────────────────────────────────────────────
 
