@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"useState\\\\|setLanguage\\\\|language\\\\|SignLanguageCode\" /c/Code/Azure-SignBridge-Multimodal/src/app/room/[id]/page.tsx)"
+    ]
+  }
+}

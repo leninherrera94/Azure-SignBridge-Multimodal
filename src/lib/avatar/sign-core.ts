@@ -66,6 +66,12 @@ export const NATURAL_HAND = hand(10, 10, 10, 10, 10);
 export const FIST         = hand(90, 90, 90, 90, 90);
 export const ILY          = hand( 0,  0, 90, 90,  0);
 export const HAND_Y       = hand( 0, 90, 90, 90,  0);
+export const L_HAND       = hand( 0,  0, 90, 90, 90);  // thumb + index (L shape)
+export const POINT        = hand(70,  0, 90, 90, 90);  // index pointing
+export const V_HAND       = hand(70,  0,  0, 90, 90);  // V / peace
+export const W_HAND       = hand(70,  0,  0,  0, 90);  // three fingers
+export const C_HAND       = hand(30, 45, 45, 45, 45);  // C shape
+export const O_HAND       = hand(40, 60, 60, 60, 60);  // O shape
 
 // ─── Rest arm poses ───────────────────────────────────────────────────────────
 
