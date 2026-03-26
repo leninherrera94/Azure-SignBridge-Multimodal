@@ -1,6 +1,6 @@
 # Azure SignBridge Multimodal — Documentación Exhaustiva
 
-> Generado el 2026-03-26. Documenta el estado real del código; las secciones marcadas como **[STUB]** corresponden a módulos con esqueleto definido pero sin implementación funcional.
+> Actualizado el 2026-03-26. Documenta el estado real del código; las secciones marcadas como **[STUB]** corresponden a módulos con esqueleto definido pero sin implementación funcional.
 
 ---
 
@@ -42,7 +42,7 @@ Las personas sordas o con discapacidad auditiva no pueden participar en video-re
 
 | Capa | Tecnología | Versión |
 |---|---|---|
-| Framework Web | Next.js | 15 (App Router) |
+| Framework Web | Next.js | 16.2.1 (App Router) |
 | UI | React | 18 |
 | Lenguaje | TypeScript | 5 |
 | Estilos | Tailwind CSS | 3 |
@@ -298,9 +298,10 @@ Azure-SignBridge-Multimodal/
 │   │   │   ├── sign-core.ts          # Tipos: FingerRotation, HandPose, ArmPose, AvatarKeyframe
 │   │   │   ├── sign-animations.ts    # Barrel: exporta todas las animaciones + helpers
 │   │   │   ├── sign-animations-asl.ts # 38+ señas ASL con keyframes completos (~38KB)
-│   │   │   ├── sign-animations-lsc.ts # Variante LSC (Lengua de Señas Colombiana)
-│   │   │   ├── sign-loader.ts        # Selector dual: ASL vs LSC según idioma
-│   │   │   ├── sign-languages.ts     # Mapeo idioma UI → lengua de señas
+│   │   │   ├── sign-animations-lsc.ts # LSC (Lengua de Señas Colombiana): vocabulario + alfabeto completo
+│   │   │   ├── sign-animations-lsb.ts # LSB (Língua Brasileira de Sinais): 73 señas + 26 letras + 98 mapeos
+│   │   │   ├── sign-loader.ts        # Selector ASL / LSC / LSB según idioma de UI
+│   │   │   ├── sign-languages.ts     # Mapeo idioma UI → lengua de señas (3 idiomas)
 │   │   │   └── sign-db-loader.ts     # Cosmos DB SignDefinition → SignAnimation
 │   │   │
 │   │   └── agents/              # Orquestación IA (esqueleto, no funcional)
@@ -421,10 +422,11 @@ Azure-SignBridge-Multimodal/
 | `avatar-engine.ts` | Motor Three.js: carga GLB, sistema de keyframes, idle breathing, blink, cola de reproducción |
 | `sign-core.ts` | Tipos: `FingerRotation`, `HandPose`, `ArmPose`, `AvatarKeyframe`, `SignAnimation` |
 | `sign-animations-asl.ts` | 38+ señas ASL con keyframes completos + mapa `WORD_TO_SIGN_ASL` |
-| `sign-animations-lsc.ts` | Variante LSC (Lengua de Señas Colombiana) |
+| `sign-animations-lsc.ts` | LSC (Lengua de Señas Colombiana): vocabulario extendido + alfabeto completo (1736 líneas) |
+| `sign-animations-lsb.ts` | LSB (Língua Brasileira de Sinais): 73 señas léxicas + 26 letras (letra_a…letra_z) + 98 mapeos `WORD_TO_SIGN_LSB` (1299 líneas) |
 | `sign-animations.ts` | Barrel de exportaciones + helpers de interpolación |
-| `sign-loader.ts` | Selecciona ASL vs LSC según idioma de UI |
-| `sign-languages.ts` | Mapeo: código de idioma → lengua de señas |
+| `sign-loader.ts` | Selecciona ASL / LSC / LSB según idioma de UI |
+| `sign-languages.ts` | Mapeo: código de idioma UI → `SignLanguageCode` ("ASL" \| "LSC" \| "LSB") — en-US→ASL, es-CO→LSC, pt-BR→LSB, es-ES→ASL |
 | `sign-db-loader.ts` | Convierte `SignDefinition` de Cosmos DB a `SignAnimation` |
 
 **Capacidades del AvatarEngine:**
@@ -864,11 +866,16 @@ Crea una identidad ACS y devuelve credenciales para la videollamada.
 | `framer-motion` | Animaciones de UI |
 | `three` | Renderizado 3D del avatar |
 | `@azure/openai` | Cliente Azure OpenAI (GPT-4o) |
-| `@azure/cognitiveservices-speech-sdk` | Azure Speech SDK |
+| `microsoft-cognitiveservices-speech-sdk` | Azure Speech SDK |
 | `@azure/cosmos` | Cliente Cosmos DB |
 | `@azure/communication-calling` | ACS video calling SDK |
+| `@azure/communication-common` | Tipos comunes de ACS |
 | `@azure/communication-identity` | Creación de usuarios ACS |
 | `@azure/ai-text-analytics` | Language service (PII detection) |
+| `@azure/storage-blob` | SDK de Azure Blob Storage |
+| `@microsoft/signalr` | Cliente SignalR (v10) |
+| `@gltf-transform/core` | Procesamiento/transformación de modelos GLB |
+| `@gltf-transform/extensions` | Extensiones del procesador GLTF |
 
 ### Dependencias de desarrollo
 
@@ -879,6 +886,7 @@ Crea una identidad ACS y devuelve credenciales para la videollamada.
 | `eslint`, `eslint-config-next` | Linting |
 | `tsx` | Ejecuta scripts TypeScript directamente |
 | `postcss` | Procesamiento de CSS (requerido por Tailwind) |
+| `dotenv` | Carga `.env` en scripts de Node (verify-azure, seed-signs) |
 
 ### Variables de entorno
 
@@ -1240,7 +1248,7 @@ No se encontró `.commitlintrc`, `CONTRIBUTING.md` ni convención documentada. P
 - Mensajes descriptivos en inglés
 
 ### Convenciones de ramas
-- Rama activa: `v1.2.x`
+- Rama activa: `develop`
 - Rama principal: `main`
 
 ---
@@ -1277,7 +1285,7 @@ No se encontró `.commitlintrc`, `CONTRIBUTING.md` ni convención documentada. P
 
 4. **Reconocimiento de señas limitado:** Solo 13 formas estáticas de mano; no hay reconocimiento de señas dinámicas (con movimiento). El clasificador es rule-based, sin ML.
 
-5. **LSC no verificado:** `sign-animations-lsc.ts` existe pero no fue examinado en detalle; la completitud de las animaciones LSC es desconocida.
+5. **LSC expandido y verificado:** `sign-animations-lsc.ts` fue revisado en detalle; incluye vocabulario extendido + alfabeto completo (1736 líneas). LSB también fue agregado con soporte para Português/Brasil (`pt-BR`) — 73 señas léxicas + 26 letras + 98 mapeos de palabras.
 
 6. **Sin CI/CD:** No hay pipeline automatizado de tests ni deploy.
 
@@ -1293,7 +1301,7 @@ No se encontró `.commitlintrc`, `CONTRIBUTING.md` ni convención documentada. P
 | SignalR | Solo 1 usuario ve señas | Funcionalidad core incompleta |
 | Avatar GLB | Debe descargarse manualmente | Fricción en setup |
 | Agents | 5 agentes son stubs | Arquitectura declarada pero no funcional |
-| MediaPipe | Solo señas estáticas | Vocabulario de reconocimiento muy limitado |
+| MediaPipe | Solo señas estáticas (13 formas); no afecta producción de señas (ASL/LSC/LSB tienen vocabulario completo) | Reconocimiento entrante muy limitado |
 | Build config | Errores TypeScript ignorados | Deuda de tipos acumulándose |
 
 ### Idiomas de señas soportados
