@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Azure-SignBridge-Multimodal
+Plataforma de comunicación inclusiva que integra Azure AI Services para traducción bidireccional en tiempo real entre voz, texto y lengua de señas (LSC). Incluye videollamadas con ACS, moderación de contenido y generación de resúmenes accesibles. Diseñado para transformar la accesibilidad en entornos laborales y educativos.
 
-## Getting Started
+## 🎯 Problema que Resolvemos
 
-First, run the development server:
+Las personas sordas y con pérdida auditiva enfrentan barreras de comunicación significativas en lugares de trabajo, aulas y servicios públicos. La falta de intérpretes de lengua de señas y herramientas de comunicación accesibles limita su participación plena en la sociedad.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 💡 Nuestra Solución: SignBridge AI
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**SignBridge AI** es un centro de comunicación con IA multimodal que permite una participación fluida a través del habla, texto y lengua de señas, integrándose perfectamente en herramientas de colaboración cotidianas.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Características Principales
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **🎙️ Transcripción en Tiempo Real**: Conversión de voz a texto con alta precisión usando Azure AI Speech
+- **🤟 Traducción Bidireccional**: Traducción entre lenguaje hablado y representaciones visuales en lengua de señas mediante clips animados
+- **🛡️ Filtrado de Contenido**: Moderación automática con Azure AI Content Safety para garantizar comunicaciones seguras e inclusivas
+- **📝 Resúmenes Automáticos**: Generación de notas de reunión accesibles en formato Markdown exportable
+- **📹 Videollamada Integrada**: Comunicación en tiempo real mediante Azure Communication Services
 
-## Learn More
+### Arquitectura de Servicios Azure
 
-To learn more about Next.js, take a look at the following resources:
+| Servicio | Función |
+|----------|---------|
+| Azure AI Speech | Speech-to-Text y Text-to-Speech |
+| Azure AI Content Safety | Filtrado de lenguaje dañino |
+| Azure Communication Services | Videollamadas en tiempo real |
+| Azure Blob Storage | Almacenamiento de clips de señas y archivos |
+| Azure AI Foundry | Orquestación de modelos de IA |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔄 Flujos del Sistema
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Flujo 1: Persona Oyente → Persona Sorda
+1. Captura de audio del hablante
+2. Transcripción voz a texto (Azure AI Speech)
+3. Filtrado de contenido dañino (Content Safety)
+4. Traducción a secuencia de clips de lengua de señas
+5. Presentación visual al usuario sordo
