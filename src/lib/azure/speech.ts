@@ -118,6 +118,7 @@ export function stopRecognition(
 export const SUPPORTED_LANGUAGES = [
   { code: "en-US", label: "English (US)" },
   { code: "es-ES", label: "Español (ES)" },
+  { code: "es-CO", label: "Español (Colombia)" },
   { code: "fr-FR", label: "Français (FR)" },
   { code: "de-DE", label: "Deutsch (DE)" },
   { code: "pt-BR", label: "Português (BR)" },

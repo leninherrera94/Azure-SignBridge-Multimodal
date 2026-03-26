@@ -12,6 +12,8 @@ import { SUPPORTED_LANGUAGES } from "@/lib/azure/speech";
 import type { SupportedLanguageCode } from "@/lib/azure/speech";
 import type { SignAvatarHandle } from "@/components/SignAvatar";
 import type { SignSequenceItem } from "@/lib/avatar/sign-animations";
+import { getKnownSignIds, getWordMap } from "@/lib/avatar/sign-loader";
+import { resolveSignLanguageForUiLanguage, type SignLanguageCode } from "@/lib/avatar/sign-languages";
 import { VideoStreamRenderer, RemoteVideoStream } from "@azure/communication-calling";
 
 export function RemoteParticipantVideo({ stream }: { stream: RemoteVideoStream }) {
@@ -266,13 +268,17 @@ const KNOWN_SIGNS_MAP: Record<string, string> = {
   parte: "part", partes: "part",
 };
 
-function clientLocalFallback(text: string): SignSequenceItem[] {
+function clientLocalFallback(text: string, signLanguage: SignLanguageCode): SignSequenceItem[] {
+  const loadedWordMap = getWordMap(signLanguage);
+  const loadedKnownSignIds = getKnownSignIds(signLanguage);
+  const wordMap = signLanguage === "ASL" && Object.keys(loadedWordMap).length === 0 ? KNOWN_SIGNS_MAP : loadedWordMap;
+  const knownSignIds = signLanguage === "ASL" && loadedKnownSignIds.size === 0 ? KNOWN_SIGN_IDS : loadedKnownSignIds;
   const words = text.toLowerCase().replace(/[^\w\s]/g, "").split(/\s+/).filter((w) => w.length > 0);
   const seq: SignSequenceItem[] = [];
   for (const word of words) {
     if (SKIP_WORDS_SET.has(word)) continue;
-    const signId = KNOWN_SIGNS_MAP[word];
-    if (signId) {
+    const signId = wordMap[word];
+    if (signId && knownSignIds.has(signId)) {
       seq.push({ type: "sign", id: signId, display: signId.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase()) });
     } else {
       seq.push({ type: "spell", word, display: word.toUpperCase().split("").join("-") });
@@ -313,6 +319,7 @@ export default function RoomPage({ params }: PageProps) {
   const [mode, setMode] = useState<CommMode | null>(null);
   const [tab,  setTab]  = useState<RoomTab>("avatar");
   const [language, setLanguage] = useState<SupportedLanguageCode>("en-US");
+  const activeSignLang = resolveSignLanguageForUiLanguage(language);
 
   // ── Session ──────────────────────────────────────────────────────────────────
   const [sessionStart] = useState(() => new Date());
@@ -544,7 +551,7 @@ export default function RoomPage({ params }: PageProps) {
           fetch("/api/translate-to-signs", {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ text }),
+            body:    JSON.stringify({ text, language }),
           }),
           new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error("timeout")), 3000)
@@ -628,7 +635,7 @@ export default function RoomPage({ params }: PageProps) {
         }
       } catch {
         // Timeout or network error → local fallback
-        sequence = clientLocalFallback(text);
+        sequence = clientLocalFallback(text, activeSignLang);
         const responseMs = Date.now() - t0;
         addDecision({
           action:   "translation",
@@ -665,7 +672,7 @@ export default function RoomPage({ params }: PageProps) {
         sequence
       });
     },
-    [mode, addMessage, addDecision, drainQueue, sendData]
+    [mode, language, activeSignLang, addMessage, addDecision, drainQueue, sendData]
   );
 
   // ── Chat input submit (used in type mode and chat tab) ────────────────────────
@@ -855,6 +862,13 @@ export default function RoomPage({ params }: PageProps) {
               </div>
             )}
 
+            <div
+              className="absolute top-3 left-36 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+              style={{ background: "rgba(167,139,250,0.18)", border: "1px solid rgba(167,139,250,0.4)", color: "#ddd6fe" }}
+            >
+              🤟 {activeSignLang}
+            </div>
+
             {/* Translating badge */}
             {isTranslating && (
               <div
@@ -981,7 +995,7 @@ export default function RoomPage({ params }: PageProps) {
             >
               {SUPPORTED_LANGUAGES.map(({ code, label }) => (
                 <option key={code} value={code}>
-                  {code === "en-US" ? "🇺🇸 " : code === "es-ES" ? "🇪🇸 " : ""}
+                  {code === "en-US" ? "🇺🇸 " : code === "es-ES" ? "🇪🇸 " : code === "es-CO" ? "🇨🇴 " : ""}
                   {label}
                 </option>
               ))}

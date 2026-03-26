@@ -7,7 +7,7 @@
 #
 # Requirements:
 #   - az CLI logged in  (az login)
-#   - Node 20 + npm installed locally
+#   - Node >= 20.9.0 installed locally (recommended: Node 22 LTS)
 #   - AZURE_RESOURCE_GROUP env var set, OR pass RG as second arg
 #
 # Example:
@@ -24,6 +24,21 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${REPO_ROOT}/.next/standalone"
 PACKAGE_DIR="${REPO_ROOT}/.deploy"
 ZIP_PATH="${REPO_ROOT}/signbridge-app.zip"
+
+# ── Runtime checks ───────────────────────────────────────────────────────────
+if ! command -v node >/dev/null 2>&1; then
+  echo "✗ Node.js not found. Install Node >= 20.9.0 (recommended: Node 22 LTS)."
+  exit 1
+fi
+
+NODE_VERSION="$(node -p 'process.versions.node')"
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
+NODE_MINOR="$(node -p 'process.versions.node.split(".")[1]')"
+
+if [ "${NODE_MAJOR}" -lt 20 ] || [ "${NODE_MAJOR}" -eq 20 -a "${NODE_MINOR}" -lt 9 ]; then
+  echo "✗ Detected Node ${NODE_VERSION}. This project requires Node >= 20.9.0 (recommended: Node 22 LTS)."
+  exit 1
+fi
 
 echo "╔══════════════════════════════════════════════════════════════════╗"
 echo "║  SignBridge AI — App Service Deploy                             ║"

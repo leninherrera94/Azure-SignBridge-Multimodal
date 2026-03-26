@@ -1,5 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Runtime prerequisites
+
+- Node.js `>= 20.9.0` (recommended: Node 22 LTS)
+- npm `>= 10`
+
+Node 16 is not supported by this project because `next@16` and multiple dependencies require Node 20+.
+
 ## Getting Started
 
 First, run the development server:
