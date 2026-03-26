@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import SignAvatar from "@/components/SignAvatar";
 import OnboardingModal, { type CommMode } from "@/components/OnboardingModal";
 import SessionSummary, { type ChatMessage, type AISummaryResult } from "@/components/SessionSummary";
@@ -9,6 +10,8 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSignRecognition } from "@/hooks/useSignRecognition";
 import type { SignAvatarHandle } from "@/components/SignAvatar";
 import type { SignSequenceItem } from "@/lib/avatar/sign-animations";
+import { UI_LANGUAGES } from "@/lib/azure/speech";
+import type { SupportedLanguageCode } from "@/lib/azure/speech";
 
 // ─── Client-side local fallback ───────────────────────────────────────────────
 
@@ -82,11 +85,14 @@ const FONT_SIZES: Record<"S" | "M" | "L" | "XL", string> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function RoomPage({ params }: PageProps) {
-  const roomId = params.id;
+  const roomId    = params.id;
+  const searchParams = useSearchParams();
+  const inTeams   = searchParams.get("inTeams") === "true";
 
   // ── Navigation ──────────────────────────────────────────────────────────────
-  const [mode, setMode] = useState<CommMode | null>(null);
-  const [tab,  setTab]  = useState<RoomTab>("avatar");
+  const [mode,     setMode]     = useState<CommMode | null>(null);
+  const [language, setLanguage] = useState<SupportedLanguageCode>("en-US");
+  const [tab,      setTab]      = useState<RoomTab>("avatar");
 
   // ── Session ──────────────────────────────────────────────────────────────────
   const [sessionStart] = useState(() => new Date());
@@ -103,6 +109,7 @@ export default function RoomPage({ params }: PageProps) {
   const [currentSequence, setCurrentSequence] = useState<SignSequenceItem[]>([]);
   const [activeItemIdx,   setActiveItemIdx]   = useState(-1);
   const [activeLetterIdx, setActiveLetterIdx] = useState(-1);
+  const [translatedText,  setTranslatedText]  = useState<string | null>(null);
 
   // ── Stats & Responsible AI ───────────────────────────────────────────────────
   const [signsCount,        setSignsCount]        = useState(0);
@@ -142,7 +149,7 @@ export default function RoomPage({ params }: PageProps) {
   const lastSignRef    = useRef<string | null>(null);
 
   // ── Hooks ─────────────────────────────────────────────────────────────────────
-  const speech  = useSpeechRecognition("en-US");
+  const speech  = useSpeechRecognition(language);
   const signRec = useSignRecognition();
 
   // ── Elapsed timer ─────────────────────────────────────────────────────────────
@@ -192,10 +199,17 @@ export default function RoomPage({ params }: PageProps) {
   }, [camOff]);
 
   // ── Mode selection ────────────────────────────────────────────────────────────
-  function handleModeSelect(selected: CommMode) {
+  function handleModeSelect(selected: CommMode, lang: SupportedLanguageCode) {
+    setLanguage(lang);
     setMode(selected);
-    if (selected === "speak") speech.startListening();
+    // Speech is started via useEffect below, after language state has settled
   }
+
+  // Start speech after mode + language state are committed to the DOM
+  useEffect(() => {
+    if (mode === "speak") speech.startListening();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   // ── Sign recognition lifecycle ────────────────────────────────────────────────
   useEffect(() => {
@@ -292,6 +306,8 @@ export default function RoomPage({ params }: PageProps) {
         reason?:  string;
         sequence?: SignSequenceItem[];
         simplified?: string;
+        translatedText?: string;
+        detectedLanguage?: string;
         safetyCheck?: {
           contentSafety: { passed: boolean; categories: { hate: number; sexual: number; violence: number; selfHarm: number } };
           pii:            { found: boolean; count: number; entities?: Array<{ category: string }> };
@@ -303,10 +319,10 @@ export default function RoomPage({ params }: PageProps) {
           fetch("/api/translate-to-signs", {
             method:  "POST",
             headers: { "Content-Type": "application/json" },
-            body:    JSON.stringify({ text }),
+            body:    JSON.stringify({ text, language }),
           }),
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("timeout")), 3000)
+            setTimeout(() => reject(new Error("timeout")), 8000)  // multilingual pipeline needs ~4-6s
           ),
         ]);
         const data = (await res.json()) as TranslateResponse;
@@ -360,6 +376,7 @@ export default function RoomPage({ params }: PageProps) {
         } else {
           sequence = data.sequence ?? [];
           const simplified = data.simplified ?? "";
+          setTranslatedText(data.translatedText ?? null);
 
           // ── Translation result ─────────────────────────────────────────────
           const nSigns = sequence.filter((s) => s.type === "sign").length;
@@ -415,7 +432,7 @@ export default function RoomPage({ params }: PageProps) {
         drainQueue();
       }
     },
-    [mode, addMessage, addDecision, drainQueue]
+    [mode, language, addMessage, addDecision, drainQueue]
   );
 
   // ── Chat input submit (used in type mode and chat tab) ────────────────────────
@@ -492,13 +509,14 @@ export default function RoomPage({ params }: PageProps) {
       className={`h-screen flex flex-col overflow-hidden ${fontClass}`}
       style={{ background: highContrast ? "#000" : "#0f172a", color: "#fff" }}
     >
-      {/* ── TOP BAR ─────────────────────────────────────────────────────────── */}
+      {/* ── TOP BAR — hidden inside Teams (Teams provides its own chrome) ────── */}
       <header
         className="flex-none h-14 flex items-center justify-between px-4 gap-4 z-10"
         style={{
           borderBottom:   "1px solid rgba(255,255,255,0.08)",
           background:     "rgba(15,23,42,0.95)",
           backdropFilter: "blur(8px)",
+          display:        inTeams ? "none" : undefined,
         }}
       >
         {/* Logo */}
@@ -617,24 +635,39 @@ export default function RoomPage({ params }: PageProps) {
                 className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none"
                 style={{ background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%)" }}
               >
-                {mode === "speak" && (
-                  <p className="text-white font-medium leading-snug" aria-live="polite">
-                    {speech.interimText ? (
-                      <>
-                        <span className="text-slate-300">
-                          {speech.transcript.split(" ").slice(-8).join(" ")}{" "}
-                        </span>
-                        <span className="text-slate-500 italic">{speech.interimText}</span>
-                      </>
-                    ) : speech.transcript ? (
-                      speech.transcript.split(" ").slice(-12).join(" ")
-                    ) : (
-                      <span className="text-slate-500 italic">
-                        {speech.isLoading ? "Starting microphone…" : "Listening… speak now"}
-                      </span>
-                    )}
-                  </p>
-                )}
+                {mode === "speak" && (() => {
+                  const langInfo = UI_LANGUAGES.find((l) => l.code === language);
+                  const isNonEnglish = language !== "en-US";
+                  return (
+                    <div aria-live="polite" className="flex flex-col gap-0.5">
+                      {/* Line 1: original text in user's language */}
+                      <p className="font-medium leading-snug" style={{ color: isNonEnglish ? "rgba(255,255,255,0.55)" : "#fff" }}>
+                        {isNonEnglish && langInfo && (
+                          <span className="mr-1.5 text-xs opacity-70">{langInfo.flag}</span>
+                        )}
+                        {speech.interimText ? (
+                          <>
+                            <span>{speech.transcript.split(" ").slice(-8).join(" ")}{" "}</span>
+                            <span className="text-slate-500 italic">{speech.interimText}</span>
+                          </>
+                        ) : speech.transcript ? (
+                          speech.transcript.split(" ").slice(-12).join(" ")
+                        ) : (
+                          <span className="text-slate-500 italic">
+                            {speech.isLoading ? "Starting microphone…" : "Listening… speak now"}
+                          </span>
+                        )}
+                      </p>
+                      {/* Line 2: English translation (only when non-English) */}
+                      {isNonEnglish && translatedText && (
+                        <p className="text-white font-medium leading-snug">
+                          <span className="mr-1.5 text-xs opacity-70">🇺🇸</span>
+                          {translatedText}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {mode === "sign" && (
                   <p className="font-medium" aria-live="polite">
@@ -699,6 +732,8 @@ export default function RoomPage({ params }: PageProps) {
             </div>
 
             <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value as SupportedLanguageCode)}
               className="text-xs rounded-lg px-2 py-1.5 outline-none cursor-pointer"
               style={{
                 background:  "#1e293b",
@@ -706,11 +741,11 @@ export default function RoomPage({ params }: PageProps) {
                 color:       "rgba(255,255,255,0.7)",
                 colorScheme: "dark",
               }}
-              defaultValue="en-US"
               aria-label="Language"
             >
-              <option value="en-US">🇺🇸 English</option>
-              <option value="es-ES">🇪🇸 Spanish</option>
+              {UI_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>{l.flag} {l.name}</option>
+              ))}
             </select>
           </div>
 
@@ -1049,6 +1084,28 @@ export default function RoomPage({ params }: PageProps) {
                   checked={reduceMotion}
                   onChange={(v) => { setReduceMotion(v); saveA11y({ reduceMotion: v }); }}
                 />
+
+                <div>
+                  <p className="text-xs text-slate-400 mb-2">Speech Language</p>
+                  <div className="flex gap-2">
+                    {UI_LANGUAGES.map((l) => (
+                      <button
+                        key={l.code}
+                        onClick={() => setLanguage(l.code)}
+                        className="flex-1 flex flex-col items-center gap-1 py-2 rounded-lg text-xs font-medium transition-all"
+                        style={{
+                          background: language === l.code ? "rgba(6,182,212,0.15)" : "rgba(255,255,255,0.05)",
+                          border:     `1px solid ${language === l.code ? "rgba(6,182,212,0.5)" : "rgba(255,255,255,0.1)"}`,
+                          color:      language === l.code ? "#06b6d4" : "rgba(255,255,255,0.45)",
+                        }}
+                        aria-pressed={language === l.code}
+                      >
+                        <span className="text-base">{l.flag}</span>
+                        <span>{l.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
 

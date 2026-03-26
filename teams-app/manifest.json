@@ -1,0 +1,77 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "b5e1f2a3-4c6d-4e8f-9a0b-1c2d3e4f5a6b",
+  "developer": {
+    "name": "SignBridge AI Team",
+    "websiteUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io",
+    "privacyUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io/privacy",
+    "termsOfUseUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io/terms"
+  },
+  "name": {
+    "short": "SignBridge AI",
+    "full": "SignBridge AI - Inclusive Communication Hub"
+  },
+  "description": {
+    "short": "Real-time sign language translation powered by Azure AI",
+    "full": "SignBridge AI is an inclusive communication platform that breaks barriers between deaf and hearing individuals. It provides real-time speech-to-sign language translation using a 3D avatar, sign language recognition via camera, and accessible meeting summaries. Powered by 15+ Azure AI services with full Responsible AI compliance."
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#06B6D4",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io/teams/config",
+      "canUpdateConfiguration": true,
+      "scopes": ["team", "groupChat"],
+      "context": [
+        "channelTab",
+        "privateChatTab",
+        "meetingChatTab",
+        "meetingSidePanel",
+        "meetingStage"
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "signbridge-room",
+      "name": "SignBridge Room",
+      "contentUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io/room/demo?inTeams=true",
+      "websiteUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io/room/demo",
+      "scopes": ["personal"]
+    },
+    {
+      "entityId": "signbridge-home",
+      "name": "About",
+      "contentUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io?inTeams=true",
+      "websiteUrl": "https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": [
+    "signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io"
+  ],
+  "meetingExtensionDefinition": {
+    "scenes": [],
+    "supportsStreaming": false
+  },
+  "authorization": {
+    "permissions": {
+      "resourceSpecific": [
+        {
+          "name": "OnlineMeeting.ReadBasic.Chat",
+          "type": "Delegated"
+        },
+        {
+          "name": "MeetingStage.Write.Chat",
+          "type": "Delegated"
+        }
+      ]
+    }
+  }
+}

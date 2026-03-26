@@ -127,3 +127,10 @@ export const SUPPORTED_LANGUAGES = [
 
 export type SupportedLanguageCode =
   (typeof SUPPORTED_LANGUAGES)[number]["code"];
+
+/** The three languages actively supported in the SignBridge UI */
+export const UI_LANGUAGES = [
+  { code: "en-US" as const, name: "English",   flag: "🇺🇸" },
+  { code: "es-ES" as const, name: "Español",   flag: "🇪🇸" },
+  { code: "pt-BR" as const, name: "Português", flag: "🇧🇷" },
+] satisfies Array<{ code: SupportedLanguageCode; name: string; flag: string }>;
