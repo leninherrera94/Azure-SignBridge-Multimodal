@@ -4,6 +4,12 @@ import { LSC_SIGN_ANIMATIONS, WORD_TO_SIGN_LSC } from "./sign-animations-lsc";
 import type { SignAnimation } from "./sign-core";
 import type { SignLanguageCode } from "./sign-languages";
 
+export const LETTER_PREFIX: Record<SignLanguageCode, string> = {
+  ASL: "letter_",
+  LSC: "lsc_letra_",
+  LSB: "letra_",
+};
+
 function getAnimations(lang: SignLanguageCode): SignAnimation[] {
   if (lang === "LSC") return LSC_SIGN_ANIMATIONS;
   if (lang === "LSB") return LSB_SIGN_ANIMATIONS;

@@ -923,6 +923,39 @@ const YO_TOUCH: ArmPose = {
   hand:     [ -5,  62,   8],
 };
 
+// ─── Fingerspelling arm poses ─────────────────────────────────────────────────
+// Same calibration as ASL/LSB SPELL_ARM (ILY_ARM equivalent)
+
+const SPELL_ARM: ArmPose = {
+  shoulder: [ 40,  19, -32],
+  upperArm: [ 36,  68,  -3],
+  forearm:  [ 93, -39, -51],
+  hand:     [ -9,-113,   0],
+};
+
+const SPELL_ARM_SIDE: ArmPose = { ...SPELL_ARM, hand: [-9,  -60,  0] };
+const SPELL_ARM_DOWN: ArmPose = { ...SPELL_ARM, hand: [-9, -113, 30] };
+
+/** LSC fingerspelling: 500 ms, lsc_letra_ prefix, 4-keyframe hold. */
+function lsc_letra(
+  letter: string,
+  t: number, i: number, m: number, r: number, p: number,
+  arm: ArmPose = SPELL_ARM,
+): SignAnimation {
+  const h = hand(t, i, m, r, p);
+  return {
+    id: `lsc_letra_${letter}`,
+    name: letter.toUpperCase(),
+    duration: 500,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: h, leftHand: NATURAL_HAND },
+      { time: 0.15, rightArm: arm, rightHand: h },
+      { time: 0.85, rightArm: arm },
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L, rightHand: NATURAL_HAND },
+    ],
+  };
+}
+
 // ─── Animations ───────────────────────────────────────────────────────────────
 
 export const LSC_SIGN_ANIMATIONS: SignAnimation[] = [
@@ -1451,6 +1484,55 @@ export const LSC_SIGN_ANIMATIONS: SignAnimation[] = [
       { time: 1.00, rightArm: REST_ARM_R,        leftArm: REST_ARM_L,  rightHand: NATURAL_HAND, leftHand: NATURAL_HAND },
     ],
   },
+
+  // ── LSC Fingerspelling A–Z + Ñ ───────────────────────────────────────────────
+  //   thumb, index, middle, ring, pinky  (0 = extended, 90 = fully curled)
+
+  lsc_letra("a",  10, 90, 90, 90, 90),              // A: fist, thumb alongside index
+  lsc_letra("b",  90,  0,  0,  0,  0),              // B: four fingers up, thumb folded
+  lsc_letra("c",  30, 45, 45, 45, 45),              // C: curved C shape
+  lsc_letra("d",  50,  0, 80, 80, 80),              // D: index up, others curl to thumb
+  lsc_letra("e",  50, 70, 70, 70, 70),              // E: all fingertips curled toward thumb
+  lsc_letra("f",  50, 70,  0,  0,  0),              // F: index+thumb circle, three fingers up
+  lsc_letra("g",   0,  0, 90, 90, 90, SPELL_ARM_SIDE), // G: index+thumb sideways
+  lsc_letra("h",  60,  0,  0, 90, 90, SPELL_ARM_SIDE), // H: index+middle sideways
+  lsc_letra("i",  70, 90, 90, 90,  0),              // I: pinky extended
+  lsc_letra("j",  70, 90, 90, 90,  0),              // J: same as I (static; traces J arc)
+  lsc_letra("k",  30,  0,  0, 90, 90),              // K: V with thumb between fingers
+  lsc_letra("l",   0,  0, 90, 90, 90),              // L: thumb+index L shape
+  lsc_letra("m",  80, 70, 70, 70, 90),              // M: thumb under three fingers
+  lsc_letra("n",  80, 70, 70, 90, 90),              // N: thumb under two fingers
+
+  // Ñ — N handshape with wrist side-to-side wiggle (LSC-specific letter)
+  {
+    id: "lsc_letra_ñ",
+    name: "Ñ",
+    duration: 700,
+    keyframes: [
+      { time: 0.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L,
+        rightHand: hand(80, 70, 70, 90, 90), leftHand: NATURAL_HAND },
+      { time: 0.15, rightArm: SPELL_ARM,
+        rightHand: hand(80, 70, 70, 90, 90) },
+      { time: 0.35, rightArm: { ...SPELL_ARM, hand: [-9, -100, 15] } },   // wrist twist right
+      { time: 0.55, rightArm: { ...SPELL_ARM, hand: [-9, -126, -15] } },  // wrist twist left
+      { time: 0.75, rightArm: { ...SPELL_ARM, hand: [-9, -113,   0] } },  // return center
+      { time: 1.00, rightArm: REST_ARM_R, leftArm: REST_ARM_L,
+        rightHand: NATURAL_HAND },
+    ],
+  },
+
+  lsc_letra("o",  40, 60, 60, 60, 60),              // O: all fingertips touch thumb
+  lsc_letra("p",  30,  0,  0, 90, 90, SPELL_ARM_DOWN), // P: K shape pointing down
+  lsc_letra("q",   0,  0, 90, 90, 90, SPELL_ARM_DOWN), // Q: G shape pointing down
+  lsc_letra("r",  70,  0,  0, 90, 90),              // R: index+middle crossed/together
+  lsc_letra("s",  60, 90, 90, 90, 90),              // S: fist, thumb over fingers
+  lsc_letra("t",  50, 80, 90, 90, 90),              // T: thumb tucked between index+middle
+  lsc_letra("u",  70,  0,  0, 90, 90),              // U: index+middle together upward
+  lsc_letra("v",  70,  0,  0, 90, 90),              // V: index+middle spread
+  lsc_letra("w",  70,  0,  0,  0, 90),              // W: three fingers extended
+  lsc_letra("x",  70, 45, 90, 90, 90),              // X: index hooked/bent
+  lsc_letra("y",   0, 90, 90, 90,  0),              // Y: thumb+pinky extended
+  lsc_letra("z",  70,  0, 90, 90, 90),              // Z: index points (traces Z)
 
 ];
 

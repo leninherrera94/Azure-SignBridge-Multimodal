@@ -25,6 +25,7 @@ export interface SignAvatarHandle {
   ): Promise<void>;
   setSkinTone(tone: "light" | "medium" | "dark"): void;
   setSpeed(mult: number):          void;
+  setSignLanguage(lang: import("../lib/avatar/sign-languages").SignLanguageCode): void;
   setRestPose():                   void;
   setStaticPose(pose: {
     rightArm?:  import("../lib/avatar/sign-animations").ArmPose;
@@ -68,6 +69,7 @@ const SignAvatar = forwardRef<SignAvatarHandle, SignAvatarProps>(
       playMixedSequence: (items, onProg) => engineRef.current?.playMixedSequence(items, onProg) ?? Promise.resolve(),
       setSkinTone:       (t)             => engineRef.current?.setSkinTone(t),
       setSpeed:          (m)             => engineRef.current?.setSpeed(m),
+      setSignLanguage:   (lang)          => engineRef.current?.setSignLanguage(lang),
       setRestPose:       ()              => engineRef.current?.setRestPose(),
       setStaticPose:     (pose)          => engineRef.current?.setStaticPose(pose),
       clearStaticPose:   ()              => engineRef.current?.clearStaticPose(),

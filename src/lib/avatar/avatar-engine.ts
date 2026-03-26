@@ -17,7 +17,6 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 import {
   SIGN_ANIMATIONS,
-  getSignAnimation,
   fillKeyframes,
   interpolateFrame,
   easeInOut,
@@ -33,6 +32,8 @@ import {
   type FilledKeyframe,
   type FingerRotation,
 } from "./sign-animations";
+import { getSignAnimation, LETTER_PREFIX } from "./sign-loader";
+import type { SignLanguageCode } from "./sign-languages";
 
 // ─── Bone name maps ───────────────────────────────────────────────────────────
 
@@ -124,6 +125,9 @@ export class AvatarEngine {
 
   // Skin tone
   private skinTint = new THREE.Color(1, 1, 1);
+
+  // Sign language (determines fingerspelling prefix)
+  signLanguage: SignLanguageCode = "ASL";
 
   // Callbacks
   onProgress?:  (pct: number)   => void;
@@ -486,7 +490,7 @@ export class AvatarEngine {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   playSign(signId: string): Promise<void> {
-    const anim = getSignAnimation(signId);
+    const anim = getSignAnimation(signId, this.signLanguage);
     if (!anim) return Promise.resolve();
 
     return new Promise<void>((resolve) => {
@@ -508,10 +512,11 @@ export class AvatarEngine {
 
   /** Fingerspell a word letter by letter (80 ms gap between letters). */
   async fingerspell(word: string, onLetter?: (letterIdx: number) => void): Promise<void> {
-    const letters = word.toLowerCase().split("").filter((c) => /[a-z]/.test(c));
+    const prefix  = LETTER_PREFIX[this.signLanguage];
+    const letters = word.toLowerCase().split("").filter((c) => /[a-záéíóúüñ]/.test(c));
     for (let j = 0; j < letters.length; j++) {
-      const id = `letter_${letters[j]}`;
-      if (getSignAnimation(id)) {
+      const id = `${prefix}${letters[j]}`;
+      if (getSignAnimation(id, this.signLanguage)) {
         onLetter?.(j);
         await this.playSign(id);
         if (j < letters.length - 1) {
@@ -519,6 +524,10 @@ export class AvatarEngine {
         }
       }
     }
+  }
+
+  setSignLanguage(lang: SignLanguageCode): void {
+    this.signLanguage = lang;
   }
 
   /**
@@ -547,7 +556,7 @@ export class AvatarEngine {
   }
 
   private startAnim(signId: string): void {
-    const anim = getSignAnimation(signId);
+    const anim = getSignAnimation(signId, this.signLanguage);
     if (!anim) return;
     this.isReturning  = false;
     this.playingAnim  = anim;

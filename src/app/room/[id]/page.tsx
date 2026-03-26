@@ -399,6 +399,11 @@ export default function RoomPage({ params }: PageProps) {
     } catch { /* ignore */ }
   }, []);
 
+  // ── Sync sign language to avatar engine ──────────────────────────────────────
+  useEffect(() => {
+    avatarRef.current?.setSignLanguage(activeSignLang);
+  }, [activeSignLang]);
+
   function saveA11y(update: Record<string, unknown>) {
     try {
       const current = JSON.parse(localStorage.getItem("signbridge-a11y") ?? "{}") as Record<string, unknown>;
