@@ -630,11 +630,12 @@ export default function RoomPage({ params }: PageProps) {
               </div>
             )}
 
-            {/* Sign detection canvas overlay */}
+            {/* Sign detection canvas overlay — mirrored to match selfie video */}
             {mode === "sign" && (
               <canvas
                 ref={canvasRef}
                 className="absolute inset-0 w-full h-full pointer-events-none"
+                style={{ transform: "scaleX(-1)" }}
                 aria-hidden
               />
             )}
