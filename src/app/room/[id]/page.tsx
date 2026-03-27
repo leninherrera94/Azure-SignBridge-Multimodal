@@ -14,17 +14,22 @@ import { UI_LANGUAGES, SUPPORTED_LANGUAGES } from "@/lib/azure/speech";
 import type { SupportedLanguageCode } from "@/lib/azure/speech";
 import { getKnownSignIds, getWordMap } from "@/lib/avatar/sign-loader";
 import { resolveSignLanguageForUiLanguage, type SignLanguageCode } from "@/lib/avatar/sign-languages";
-import { VideoStreamRenderer, RemoteVideoStream } from "@azure/communication-calling";
+// Browser-only — type-only import to avoid SSR crash (MediaStream is not defined on server)
+import type { VideoStreamRenderer, RemoteVideoStream } from "@azure/communication-calling";
 
 export function RemoteParticipantVideo({ stream }: { stream: RemoteVideoStream }) {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    let renderer: VideoStreamRenderer | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let renderer: any = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let view: any = null;
     let mounted = true;
     async function render() {
       if (!containerRef.current) return;
-      renderer = new VideoStreamRenderer(stream);
+      // Dynamic import so @azure/communication-calling only loads in the browser
+      const { VideoStreamRenderer: VSR } = await import("@azure/communication-calling");
+      renderer = new VSR(stream);
       view = await renderer.createView();
       if (mounted && containerRef.current) {
         containerRef.current.appendChild(view.target);
