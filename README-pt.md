@@ -8,6 +8,16 @@ SignBridge AI é uma plataforma de comunicação bidirecional em tempo real que 
 
 ---
 
+## 🔗 Links Rápidos
+
+| Recurso | Link |
+|---|---|
+| 🌐 **Demo ao Vivo** | [Experimentar o app →](https://signbridge-app.lemondesert-0957a79b.eastus2.azurecontainerapps.io/room/demo) |
+| 🎬 **Vídeo Demo** | [Ver no OneDrive →](https://1drv.ms/v/c/190b5335a38f373f/IQDalusf7oxTR58Coyy3YDlDAfRJU7bSNk5BqMjaxflGptY?e=gG5cAR) |
+| 📊 **Blueprint IA (PPTX)** | [SignBridge_AI_Blueprint.pptx](./SignBridge_AI_Blueprint.pptx) |
+
+---
+
 ## 🎯 Problema e Visão
 
 **1,5 bilhão de pessoas no mundo vivem com perda auditiva** (OMS, 2025), mas a infraestrutura para apoiá-las permanece criticamente subfinanciada e inacessível:
